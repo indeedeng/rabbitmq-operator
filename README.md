@@ -1,7 +1,7 @@
 # Operator for RabbitMQ
 
 ## Overview
-### Status: **Pre-alpha! Not for production use! Breaking changes can appear at anytime without notice!**
+### Status: **Pre-alpha!!! Not for production use! Breaking changes can appear at anytime without notice!**
 
 Provision and manage RabbitMQ clusters on Kubernetes! This operator currently has the following features:
 * Deploy N-node RabbitMQ clusters, utilizing auto-discovery for automatic clustering
