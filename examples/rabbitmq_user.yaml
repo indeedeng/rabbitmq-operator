@@ -1,0 +1,14 @@
+apiVersion: indeed.com/v1alpha1
+kind: RabbitMQUserCustomResource
+metadata:
+  name: myrabbitmq-user
+  namespace: rabbitmqs
+spec:
+  clusterName: myrabbitmq
+  vHosts:
+    - name: "/"
+      permissions:
+        configure: ".*"
+        write: ".*"
+        read: ".*"
+  tags: ["policymaker"]

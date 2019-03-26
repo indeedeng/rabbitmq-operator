@@ -1,0 +1,351 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rabbitmqs
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: rabbitmqs.indeed.com
+spec:
+  group: indeed.com
+  names:
+    kind: RabbitMQCustomResource
+    listKind: RabbitMQCustomResourceList
+    plural: rabbitmqs
+    singular: rabbitmq
+    shortNames:
+      - rmq
+  scope: Namespaced
+  version: v1alpha1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            rabbitMQImage:
+              type: string
+            initContainerImage:
+              type: string
+            createLoadBalancer:
+              type: boolean
+            replicas:
+              type: number
+              minimum: 0
+            compute:
+              properties:
+                cpuRequest:
+                  type: string
+                memory:
+                  type: string
+            storage:
+              properties:
+                storageClassName:
+                  type: string
+                limit:
+                  type: string
+            clusterSpec:
+              properties:
+                highWatermarkFraction:
+                  type: number
+                  minimum: 0
+                  maximum: 1.0
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: rabbitmqnetworkpartitions.indeed.com
+spec:
+  group: indeed.com
+  names:
+    kind: RabbitMQNetworkPartitionCustomResource
+    listKind: RabbitMQNetworkPartitionCustomResourceList
+    plural: rabbitmqnetworkpartitions
+    singular: rabbitmqnetworkpartition
+    shortNames:
+      - rmqnp
+  scope: Namespaced
+  version: v1alpha1
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: rabbitmqusers.indeed.com
+spec:
+  group: indeed.com
+  names:
+    kind: RabbitMQUserCustomResource
+    listKind: RabbitMQUserCustomResourceList
+    plural: rabbitmqusers
+    singular: rabbitmquser
+    shortNames:
+      - rmquser
+  scope: Namespaced
+  version: v1alpha1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rabbitmq-operator
+  namespace: rabbitmqs
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rabbitmq-user
+  namespace: rabbitmqs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rabbitmq-operator
+rules:
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rabbitmq-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rabbitmq-operator
+subjects:
+  - kind: ServiceAccount
+    name: rabbitmq-operator
+    namespace: rabbitmqs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: rabbitmq-operator
+  namespace: rabbitmqs
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+      - pods/exec
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - services
+      - pods
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+    verbs:
+      - create
+      - delete
+      - get
+      - patch
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - replicasets
+    verbs:
+      - list
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - create
+      - delete
+      - get
+      - patch
+  - apiGroups:
+      - indeed.com
+    resources:
+      - rabbitmqs
+    verbs:
+      - get
+      - watch
+      - patch
+      - list
+  - apiGroups:
+      - indeed.com
+    resources:
+      - rabbitmqnetworkpartitions
+    verbs:
+      - watch
+      - get
+      - delete
+      - list
+      - patch
+  - apiGroups:
+      - indeed.com
+    resources:
+      - rabbitmqusers
+    verbs:
+      - watch
+      - get
+      - delete
+      - list
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: rabbitmq-user
+  namespace: rabbitmqs
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rabbitmq-operator
+  namespace: rabbitmqs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: rabbitmq-operator
+subjects:
+  - kind: ServiceAccount
+    name: rabbitmq-operator
+    namespace: rabbitmqs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rabbitmq-user
+  namespace: rabbitmqs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: rabbitmq-user
+subjects:
+  - kind: ServiceAccount
+    name: rabbitmq-user
+    namespace: rabbitmqs
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    heritage: indeed.com
+    operator: rabbitmq.operator.indeed.com
+  name: rabbitmq-operator
+  namespace: rabbitmqs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      operator: rabbitmq.operator.indeed.com
+  template:
+    metadata:
+      labels:
+        heritage: indeed.com
+        operator: rabbitmq.operator.indeed.com
+    spec:
+      containers:
+        - image: registry.local.tld/rabbitmq-operator:latest
+          name: rabbitmq-operator
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 500m
+              memory: 256Mi
+      serviceAccountName: rabbitmq-operator
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-config
+  namespace: rabbitmqs
+data:
+  enabled_plugins: |
+    [rabbitmq_management,rabbitmq_peer_discovery_k8s].
+  rabbitmq.conf: |
+    cluster_formation.peer_discovery_backend  = rabbit_peer_discovery_k8s
+    cluster_formation.k8s.host = kubernetes.default.svc.cluster.local
+    cluster_formation.k8s.address_type = hostname
+    cluster_formation.node_cleanup.interval = 30
+    cluster_formation.node_cleanup.only_log_warning = true
+    ## https://www.rabbitmq.com/partitions.html
+    cluster_partition_handling = ignore
+    ## See http://www.rabbitmq.com/ha.html#master-migration-data-locality
+    queue_master_locator=min-masters
+    ## See http://www.rabbitmq.com/access-control.html#loopback-users
+    loopback_users.guest = false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-startup-scripts
+  namespace: rabbitmqs
+data:
+  # This ConfigMap defines a script that is run as the pod starts up.  It exists to create a
+  # monitoring user (and any other users we may decide on in the future).  There aren't really
+  # any other good options for getting additional users in - the environment variable route only
+  # allows for a single user, and if we attempt to import a resources file any users defined
+  # there take precedence over the environment variables.
+  #
+  # By default the monitoring role doesn't have access to any vhosts.  We use this user for
+  # Datadog, which access the default vhost via "/api/aliveness-test/%2F".  To enable this to
+  # work we need to explicitly grant permissions.  Per
+  # https://lists.rabbitmq.com/pipermail/rabbitmq-discuss/2012-November/024132.html these are
+  # the minimum necessary permissions.
+  users.sh: |
+    #!/usr/bin/env bash
+    rabbitmqctl wait -t 60 "/var/lib/rabbitmq/mnesia/${RABBITMQ_NODENAME}.pid"
+    rabbitmqctl add_user monitoring monitoring
+    rabbitmqctl set_user_tags monitoring monitoring
+    rabbitmqctl set_permissions -p / monitoring '^aliveness-test$' '^amq\.default$' '^aliveness-test$'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-probes
+  namespace: rabbitmqs
+data:
+  # Define the script used by our readiness probe.
+  readiness.sh: |
+    #!/usr/bin/env bash
+    # This API will return "ok" if there are no active alarms - in that case we're definitely ready
+    # for traffic.  However, for our purposes active alarms may be fine, so we need to do further
+    # tests if this fails.
+    WGET_OUTPUT="$(wget -qO- monitoring:monitoring@localhost:15672/api/healthchecks/node)"
+    if [[ "$WGET_OUTPUT" = '{"status":"ok"}' ]]; then
+      exit 0
+    fi
+    # Did this fail due to resource alarms?
+    REGEX='^\{"status":"failed","reason":"resource alarm\(s) in effect:\[.*]"}$'
+    if [[ "$WGET_OUTPUT" =~ $REGEX ]]; then
+      exit 0
+    fi
+    # If this command failed for some other reason, say we're not ready.
+    echo "Unable to determine readiness from '$WGET_OUTPUT'"
+    # To investigate such a failure, execute the script manually:
+    # kubectl exec --namespace=<NAMESPACE> <POD> -- /probes/readiness.sh
+    # You can add debugging output to this script and reapply this file; allow a few minutes for
+    # such changes to take effect.
+    exit 1

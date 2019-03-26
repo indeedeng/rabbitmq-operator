@@ -1,0 +1,13 @@
+apiVersion: indeed.com/v1alpha1
+kind: RabbitMQNetworkPartitionCustomResource
+metadata:
+  name: myrabbitmq-network-partition
+  namespace: rabbitmqs
+spec:
+  clusterName: myrabbitmq
+  partitions:
+    - - myrabbitmq-0
+      - myrabbitmq-1
+    - - myrabbitmq-2
+  drained: []
+  serviceName: myrabbitmq-svc-discovery.rabbitmqs.svc.cluster.local

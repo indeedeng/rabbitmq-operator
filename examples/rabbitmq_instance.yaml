@@ -1,0 +1,18 @@
+apiVersion: indeed.com/v1alpha1
+kind: RabbitMQCustomResource
+metadata:
+  name: myrabbitmq
+  namespace: rabbitmqs
+spec:
+  rabbitMQImage: "rabbitmq:3.7.8-alpine"
+  initContainerImage: "busybox:latest"
+  createLoadBalancer: true
+  replicas: 3
+  compute:
+    cpuRequest: "300m"
+    memory: "512Mi"
+  storage:
+    storageClassName: rook-ceph-block
+    limit: "1Gi"
+  clusterSpec:
+    highWatermarkFraction: 0.4
