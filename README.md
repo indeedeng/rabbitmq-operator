@@ -1,7 +1,7 @@
 # Operator for RabbitMQ
 
 ## Overview
-### Status: **Pre-alpha!! Not for production use! Breaking changes can appear at anytime without notice!**
+### Status: **Pre-alpha! Not for production use! Breaking changes can appear at anytime without notice!**
 
 [![Build Status](https://travis-ci.org/indeedeng/rabbitmq-operator.svg?branch=master)](https://travis-ci.org/indeedeng/rabbitmq-operator)
 
