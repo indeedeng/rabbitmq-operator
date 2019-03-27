@@ -59,3 +59,9 @@ This operator is very much a work-in-progress. Features that we want to implemen
 * Shovel configuration
 * Policy configuration
 * Improvements to user management
+
+# Code of Conduct
+Operator for RabbitMQ is governed by the [Contributor Covenant v 1.4.1](CODE_OF_CONDUCT.md).
+
+# License
+Operator for RabbitMQ is licensed under the [Apache 2 License](LICENSE).
