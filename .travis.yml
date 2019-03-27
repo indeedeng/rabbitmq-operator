@@ -4,5 +4,9 @@ install: true
 jdk:
   - oraclejdk8
 
+services:
+  - docker
+
 script:
-  - ./gradlew build -s
+  - ./gradlew build
+  - ./release.sh
