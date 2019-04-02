@@ -1,8 +1,13 @@
 package com.indeed.operators.rabbitmq.model.rabbitmq;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+
+import java.util.List;
 
 @JsonDeserialize(builder = ShovelParameterValue.Builder.class)
 public class ShovelParameterValue extends AbstractParameterValue {
@@ -10,20 +15,20 @@ public class ShovelParameterValue extends AbstractParameterValue {
     private final String sourceUri;
     private final String sourceQueue;
     private final String destinationProtocol;
-    private final String destinationUri;
+    private final List<String> destinationUris;
 
     private ShovelParameterValue(
             final String sourceProtocol,
             final String sourceUri,
             final String sourceQueue,
             final String destinationProtocol,
-            final String destinationUri
+            final List<String> destinationUris
     ) {
         this.sourceProtocol = sourceProtocol;
         this.sourceUri = sourceUri;
         this.sourceQueue = sourceQueue;
         this.destinationProtocol = destinationProtocol;
-        this.destinationUri = destinationUri;
+        this.destinationUris = destinationUris;
     }
 
     @JsonProperty("src-protocol")
@@ -47,8 +52,8 @@ public class ShovelParameterValue extends AbstractParameterValue {
     }
 
     @JsonProperty("dest-uri")
-    public String getDestinationUri() {
-        return destinationUri;
+    public List<String> getDestinationUris() {
+        return destinationUris;
     }
 
     @Override
@@ -60,12 +65,12 @@ public class ShovelParameterValue extends AbstractParameterValue {
                 Objects.equal(sourceUri, that.sourceUri) &&
                 Objects.equal(sourceQueue, that.sourceQueue) &&
                 Objects.equal(destinationProtocol, that.destinationProtocol) &&
-                Objects.equal(destinationUri, that.destinationUri);
+                Objects.equal(destinationUris, that.destinationUris);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(sourceProtocol, sourceUri, sourceQueue, destinationProtocol, destinationUri);
+        return Objects.hashCode(sourceProtocol, sourceUri, sourceQueue, destinationProtocol, destinationUris);
     }
 
     public static Builder newBuilder() {
@@ -73,17 +78,18 @@ public class ShovelParameterValue extends AbstractParameterValue {
     }
 
     @Override
+    @JsonIgnore
     public String getComponent() {
         return "shovel";
     }
 
 
     public static class Builder {
-        private String sourceProtocol;
-        private String sourceUri;
+        private String sourceProtocol = "amqp091";
+        private String sourceUri = "amqp://";
         private String sourceQueue;
-        private String destinationProtocol;
-        private String destinationUri;
+        private String destinationProtocol = "amqp091";
+        private List<String> destinationUri = Lists.newArrayList();
 
         @JsonProperty("src-protocol")
         public Builder setSourceProtocol(final String sourceProtocol) {
@@ -110,7 +116,8 @@ public class ShovelParameterValue extends AbstractParameterValue {
         }
 
         @JsonProperty("dest-uri")
-        public Builder setDestinationUri(final String destinationUri) {
+        @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+        public Builder setDestinationUri(final List<String> destinationUri) {
             this.destinationUri = destinationUri;
             return this;
         }

@@ -11,20 +11,27 @@ import io.sundr.builder.annotations.Buildable;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         editableEnabled = false
 )
-@JsonPropertyOrder({"source", "destination"})
+@JsonPropertyOrder({"name", "source", "destination"})
 @JsonDeserialize(using = JsonDeserializer.None.class)
 public class ShovelSpec {
 
+    private final String name;
     private final SourceShovelSpec source;
     private final DestinationShovelSpec destination;
 
     @JsonCreator
     public ShovelSpec(
-        @JsonProperty("source") final SourceShovelSpec source,
-        @JsonProperty("destination") final DestinationShovelSpec destination
+            @JsonProperty("name") final String name,
+            @JsonProperty("source") final SourceShovelSpec source,
+            @JsonProperty("destination") final DestinationShovelSpec destination
     ) {
+        this.name = name;
         this.source = source;
         this.destination = destination;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public SourceShovelSpec getSource() {

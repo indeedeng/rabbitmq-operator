@@ -1,10 +1,12 @@
 package com.indeed.operators.rabbitmq.resources;
 
+import com.indeed.operators.rabbitmq.model.crd.rabbitmq.ShovelSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
 
+import java.util.List;
 import java.util.Optional;
 
 public class RabbitMQCluster {
@@ -17,6 +19,7 @@ public class RabbitMQCluster {
     private final Optional<Service> loadBalancerService;
     private final StatefulSet statefulSet;
     private final PodDisruptionBudget podDisruptionBudget;
+    private final List<ShovelSpec> shovels;
 
     public RabbitMQCluster(
             final String name,
@@ -26,7 +29,8 @@ public class RabbitMQCluster {
             final Service discoveryService,
             final Optional<Service> loadBalancerService,
             final StatefulSet statefulSet,
-            final PodDisruptionBudget podDisruptionBudget
+            final PodDisruptionBudget podDisruptionBudget,
+            final List<ShovelSpec> shovels
     ) {
         this.name = name;
         this.namespace = namespace;
@@ -36,6 +40,7 @@ public class RabbitMQCluster {
         this.loadBalancerService = loadBalancerService;
         this.statefulSet = statefulSet;
         this.podDisruptionBudget = podDisruptionBudget;
+        this.shovels = shovels;
     }
 
     public String getName() {
@@ -68,5 +73,9 @@ public class RabbitMQCluster {
 
     public PodDisruptionBudget getPodDisruptionBudget() {
         return podDisruptionBudget;
+    }
+
+    public List<ShovelSpec> getShovels() {
+        return shovels;
     }
 }

@@ -5,33 +5,36 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.Lists;
 import io.sundr.builder.annotations.Buildable;
+
+import java.util.List;
 
 @Buildable(
         builderPackage = "io.fabric8.kubernetes.api.builder",
         editableEnabled = false
 )
-@JsonPropertyOrder({"highWatermarkFraction", "shovelSpec"})
+@JsonPropertyOrder({"highWatermarkFraction", "shovels"})
 @JsonDeserialize(using = JsonDeserializer.None.class)
 public class ClusterSpec {
 
     private final double highWatermarkFraction;
-    private final ShovelSpec shovelSpec;
+    private final List<ShovelSpec> shovels;
 
     @JsonCreator
     public ClusterSpec(
             @JsonProperty("highWatermarkFraction") final double highWatermarkFraction,
-            @JsonProperty("shovelSpec") final ShovelSpec shovelSpec
+            @JsonProperty("shovels") final List<ShovelSpec> shovels
     ) {
         this.highWatermarkFraction = highWatermarkFraction;
-        this.shovelSpec = shovelSpec;
+        this.shovels = (shovels == null ? Lists.newArrayList() : shovels);
     }
 
     public double getHighWatermarkFraction() {
         return highWatermarkFraction;
     }
 
-    public ShovelSpec getShovelSpec() {
-        return shovelSpec;
+    public List<ShovelSpec> getShovels() {
+        return shovels;
     }
 }

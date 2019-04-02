@@ -1,5 +1,6 @@
 package com.indeed.operators.rabbitmq.reconciliation;
 
+import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.controller.PersistentVolumeClaimController;
 import com.indeed.operators.rabbitmq.controller.PodDisruptionBudgetController;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
@@ -8,6 +9,8 @@ import com.indeed.operators.rabbitmq.controller.StatefulSetController;
 import com.indeed.operators.rabbitmq.controller.crd.RabbitMQResourceController;
 import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
+import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
 import com.indeed.operators.rabbitmq.resources.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.resources.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
@@ -16,12 +19,13 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.indeed.operators.rabbitmq.Constants.RABBITMQ_STORAGE_NAME;
 
-public class RabbitMQClusterReconciler implements Reconciler {
+public class RabbitMQClusterReconciler {
     private static final Logger log = LoggerFactory.getLogger(RabbitMQClusterReconciler.class);
 
     private final RabbitMQClusterFactory clusterFactory;
@@ -31,8 +35,7 @@ public class RabbitMQClusterReconciler implements Reconciler {
     private final StatefulSetController statefulSetController;
     private final PodDisruptionBudgetController podDisruptionBudgetController;
     private final PersistentVolumeClaimController persistentVolumeClaimController;
-
-    private final String namespace;
+    private final ShovelReconciler shovelReconciler;
 
     public RabbitMQClusterReconciler(
             final RabbitMQClusterFactory clusterFactory,
@@ -42,7 +45,7 @@ public class RabbitMQClusterReconciler implements Reconciler {
             final StatefulSetController statefulSetController,
             final PodDisruptionBudgetController podDisruptionBudgetController,
             final PersistentVolumeClaimController persistentVolumeClaimController,
-            final String namespace
+            final ShovelReconciler shovelReconciler
     ) {
         this.clusterFactory = clusterFactory;
         this.controller = controller;
@@ -51,11 +54,9 @@ public class RabbitMQClusterReconciler implements Reconciler {
         this.statefulSetController = statefulSetController;
         this.podDisruptionBudgetController = podDisruptionBudgetController;
         this.persistentVolumeClaimController = persistentVolumeClaimController;
-
-        this.namespace = namespace;
+        this.shovelReconciler = shovelReconciler;
     }
 
-    @Override
     public void reconcile(final Reconciliation reconciliation) throws InterruptedException {
         final RabbitMQCustomResource resource = controller.get(reconciliation.getResourceName(), reconciliation.getNamespace());
 
@@ -68,8 +69,9 @@ public class RabbitMQClusterReconciler implements Reconciler {
             final RabbitMQCluster cluster = clusterFactory.fromCustomResource(resource);
 
             reconcileKubernetesObjects(cluster);
-
             deleteDanglingPvcs(resource);
+
+            shovelReconciler.reconcile(cluster);
 
             log.info("Reconciliation complete!");
         } else {
@@ -87,7 +89,7 @@ public class RabbitMQClusterReconciler implements Reconciler {
         if (cluster.getLoadBalancerService().isPresent()) {
             servicesController.createOrUpdate(cluster.getLoadBalancerService().get());
         } else {
-            servicesController.delete(RabbitMQServices.getLoadBalancerServiceName(cluster.getName()), namespace);
+            servicesController.delete(RabbitMQServices.getLoadBalancerServiceName(cluster.getName()), cluster.getNamespace());
         }
 
         statefulSetController.createOrUpdate(cluster.getStatefulSet());
@@ -103,7 +105,7 @@ public class RabbitMQClusterReconciler implements Reconciler {
         // cluster scales down.  But we don't actually have those IDs, so instead we set the owner to the
         // stateful set.  They would eventually be cleaned up when the stateful set is deleted, but to
         // conserve resources we manually delete them now if necessary.
-        final StatefulSet existing = statefulSetController.get(clusterName, namespace);
+        final StatefulSet existing = statefulSetController.get(clusterName, resource.getMetadata().getNamespace());
         final int currentReplicaCount = existing.getSpec().getReplicas();
         if (resource.getSpec().getReplicas() < currentReplicaCount) {
             log.info("Deleting dangling PersistentVolumeClaims");

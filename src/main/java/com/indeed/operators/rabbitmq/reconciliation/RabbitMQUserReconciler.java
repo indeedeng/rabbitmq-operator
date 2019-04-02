@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-public class RabbitMQUserReconciler implements Reconciler {
+public class RabbitMQUserReconciler {
 
     private final RabbitMQSecrets rabbitMQSecrets;
     private final RabbitMQUserResourceController controller;
@@ -38,7 +38,6 @@ public class RabbitMQUserReconciler implements Reconciler {
         this.passwordConverter = passwordConverter;
     }
 
-    @Override
     public void reconcile(final Reconciliation rec) throws IOException {
         final RabbitMQUserCustomResource resource = controller.get(rec.getResourceName(), rec.getNamespace());
 
