@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 import static com.indeed.operators.rabbitmq.Constants.RABBITMQ_STORAGE_NAME;
 
-public class NetworkPartitionReconciler implements Reconciler {
+public class NetworkPartitionReconciler {
     private static final Logger log = LoggerFactory.getLogger(NetworkPartitionReconciler.class);
 
     private final RabbitMQResourceController rabbitMQResourceController;

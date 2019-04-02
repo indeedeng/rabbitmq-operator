@@ -1,6 +1,7 @@
 package com.indeed.operators.rabbitmq.reconciliation;
 
 import com.google.common.collect.Maps;
+import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.controller.PersistentVolumeClaimController;
 import com.indeed.operators.rabbitmq.controller.PodDisruptionBudgetController;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
@@ -10,11 +11,8 @@ import com.indeed.operators.rabbitmq.controller.crd.RabbitMQResourceController;
 import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceBuilder;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
 import com.indeed.operators.rabbitmq.resources.RabbitMQClusterFactory;
-import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
-import com.indeed.operators.rabbitmq.resources.RabbitMQPods;
-import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
-import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
 import java.util.Map;
 
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -51,11 +50,14 @@ public class TestRabbitMQClusterReconciler {
     @Mock
     private PersistentVolumeClaimController persistentVolumeClaimController;
 
+    @Mock
+    private ShovelReconciler shovelReconciler;
+
     private RabbitMQClusterReconciler reconciler;
 
     @BeforeEach
     public void setup() {
-        reconciler = new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, "namespace");
+        reconciler = new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, shovelReconciler);
     }
 
     @Test

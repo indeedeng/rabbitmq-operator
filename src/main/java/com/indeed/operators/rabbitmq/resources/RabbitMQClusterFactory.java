@@ -73,7 +73,8 @@ public class RabbitMQClusterFactory {
                 discoveryService,
                 loadBalancerService,
                 statefulSet,
-                podDisruptionBudget
+                podDisruptionBudget,
+                resource.getSpec().getClusterSpec().getShovels()
         );
     }
 

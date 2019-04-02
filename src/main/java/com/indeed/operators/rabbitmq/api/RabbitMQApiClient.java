@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class RabbitMQApiClient {
     private static final Logger log = LoggerFactory.getLogger(RabbitMQApiClient.class);
@@ -106,19 +107,19 @@ public class RabbitMQApiClient {
         httpClient.newCall(req).execute();
     }
 
-    public void createOrUpdateShovel(final RabbitMQConnectionInfo connectionInfo, final BaseParameter<ShovelParameterValue> parameter) throws IOException {
+    public void createOrUpdateShovel(final RabbitMQConnectionInfo connectionInfo, final BaseParameter<ShovelParameterValue> shovel) throws IOException {
         final String url = String.format(
                 "%s/parameters/%s/%s/%s",
                 buildRootUrl(connectionInfo),
-                parameter.getComponent(),
-                encodeString(parameter.getVhost()),
-                encodeString(parameter.getName())
+                shovel.getComponent(),
+                encodeString(shovel.getVhost()),
+                encodeString(shovel.getName())
         );
 
         final Request req = new Request.Builder()
                 .url(url)
                 .addHeader("Authorization", buildAuthorizationHeader(connectionInfo))
-                .put(RequestBody.create(MediaType.parse("application/json"), serializePayload(parameter)))
+                .put(RequestBody.create(MediaType.parse("application/json"), serializePayload(shovel)))
                 .build();
 
         httpClient.newCall(req).execute();

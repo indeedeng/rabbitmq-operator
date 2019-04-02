@@ -22,6 +22,7 @@ import com.indeed.operators.rabbitmq.reconciliation.NetworkPartitionReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.RabbitMQClusterReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.RabbitMQUserReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.lock.NamedSemaphores;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
 import com.indeed.operators.rabbitmq.resources.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
 import com.indeed.operators.rabbitmq.resources.RabbitMQPods;
@@ -138,9 +139,17 @@ public class AppConfig {
             final StatefulSetController statefulSetController,
             final PodDisruptionBudgetController podDisruptionBudgetController,
             final PersistentVolumeClaimController persistentVolumeClaimController,
-            final String namespace
+            final ShovelReconciler shovelReconciler
     ) {
-        return new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, namespace);
+        return new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, shovelReconciler);
+    }
+
+    @Bean
+    public ShovelReconciler shovelReconciler(
+            final RabbitMQApiClient apiClient,
+            final SecretsController secretsController
+    ) {
+        return new ShovelReconciler(apiClient, secretsController);
     }
 
     @Bean

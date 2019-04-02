@@ -4,33 +4,35 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-@JsonPropertyOrder({"address", "clusterName"})
+import java.util.List;
+
+@JsonPropertyOrder({"addresses", "clusterName"})
 public class DestinationShovelSpec {
 
-    private final String address;
-    private final String clusterName;
-    private final String clusterNamespace;
+    private final List<String> addresses;
+    private final String secretName;
+    private final String secretNamespace;
 
     @JsonCreator
     public DestinationShovelSpec(
-            @JsonProperty("address") final String address,
-            @JsonProperty("clusterName") final String clusterName,
-            @JsonProperty("clusterNamespace") final String clusterNamespace
+            @JsonProperty("addresses") final List<String> addresses,
+            @JsonProperty("secretName") final String secretName,
+            @JsonProperty("secretNamespace") final String secretNamespace
     ) {
-        this.address = address;
-        this.clusterName = clusterName;
-        this.clusterNamespace = clusterNamespace;
+        this.addresses = addresses;
+        this.secretName = secretName;
+        this.secretNamespace = secretNamespace;
     }
 
-    public String getAddress() {
-        return address;
+    public List<String> getAddresses() {
+        return addresses;
     }
 
-    public String getClusterName() {
-        return clusterName;
+    public String getSecretName() {
+        return secretName;
     }
 
-    public String getClusterNamespace() {
-        return clusterNamespace;
+    public String getSecretNamespace() {
+        return secretNamespace;
     }
 }
