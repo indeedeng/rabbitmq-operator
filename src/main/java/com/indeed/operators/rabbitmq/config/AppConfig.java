@@ -165,9 +165,11 @@ public class AppConfig {
     public RabbitMQUserEventWatcher userEventWatcher(
             final RabbitMQUserReconciler reconciler,
             final RabbitMQUserResourceController controller,
-            final ClusterReconciliationOrchestrator orchestrator
+            final RabbitMQResourceController clusterController,
+            final ClusterReconciliationOrchestrator orchestrator,
+            final RabbitMQApiClient apiClient
     ) {
-        return new RabbitMQUserEventWatcher(reconciler, controller, orchestrator);
+        return new RabbitMQUserEventWatcher(reconciler, controller, clusterController, orchestrator, apiClient);
     }
 
     @Bean

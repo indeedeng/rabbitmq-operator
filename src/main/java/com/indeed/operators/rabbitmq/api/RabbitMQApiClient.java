@@ -95,6 +95,18 @@ public class RabbitMQApiClient {
         httpClient.newCall(req).execute();
     }
 
+    public void deleteUser(final RabbitMQConnectionInfo connectionInfo, final String username) throws IOException {
+        final String url = String.format("%s/users/%s", buildRootUrl(connectionInfo), username);
+
+        final Request req = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildAuthorizationHeader(connectionInfo))
+                .delete()
+                .build();
+
+        httpClient.newCall(req).execute();
+    }
+
     public void updateVHostPermissions(final RabbitMQConnectionInfo connectionInfo, final String vhost, final String username, final VHostPermissions permissions) throws IOException {
         final String url = String.format("%s/permissions/%s/%s", buildRootUrl(connectionInfo), encodeString(vhost), username);
 

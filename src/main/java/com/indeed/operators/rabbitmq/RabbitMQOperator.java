@@ -84,6 +84,14 @@ public class RabbitMQOperator implements CommandLineRunner {
             }
 
         }, 10, 60, TimeUnit.SECONDS);
+
+        scheduledExecutor.scheduleAtFixedRate(() -> {
+            try {
+                rabbitMQUserEventWatcher.reconcileAll(namespace);
+            } catch (final Throwable t) {
+                log.error("Got an error while reconciling all users", t);
+            }
+        }, 10, 60, TimeUnit.SECONDS);
     }
 
     private void registerCrdDeserializationTypes() {
