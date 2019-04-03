@@ -47,6 +47,11 @@ public class RabbitMQUserReconciler {
                 RabbitMQServices.getDiscoveryServiceName(rec.getClusterName())
         );
 
+        if (resource == null) {
+            apiClient.deleteUser(connectionInfo, rec.getResourceName());
+            return;
+        }
+
         final List<User> allUsers = apiClient.getUsers(connectionInfo);
 
         final Optional<User> maybeExistingUser = allUsers.stream().filter(user -> user.getUsername().equals(resource.getName())).findFirst();
