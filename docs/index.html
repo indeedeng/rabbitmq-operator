@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Operator for RabbitMQ</title>
+    </head>
+    <body>
+        <h1>Operator for RabbitMQ</h1>
+        <h2>Overview</h2>
+        <h3>Status</h3>
+        <p><b>Pre-alpha! Not for production use! Breaking changes can appear at anytime without notice!</b></p>
+
+        <p>View the <a href="https://travis-ci.org/indeedeng/rabbitmq-operator.svg?branch=master">build status</a>.</p>
+
+        <p>Provision and manage RabbitMQ clusters on Kubernetes! This operator currently has the
+        following features:</p>
+        <ul>
+            <li>Deploy N-node RabbitMQ clusters, utilizing auto-discovery for automatic clustering</li>
+            <li>Scale cluster replicas, storage, and CPU</li>
+            <li>Specify persistent volume storage class</li>
+            <li>Expose clusters to external clients using a LoadBalancer</li>
+            <li>Datadog auto-discovery annotations</li>
+            <li>Safely resolve network partitions without dropping messages (experimental, requires manual custom resource creation)</li>
+        </ul>
+
+        <h1>Getting Started</h1>
+        <h2>Prerequisites</h2>
+        <p>You must have a Kubernetes cluster. Standard Pod and Service networking must work.</p>
+
+        <p>The example assumes you have Rook-managed storage deployed. You can read about Rook <a href="https://rook.io/">here</a>.</p>
+
+        <h2>Deploying the operator</h2>
+        <p>Apply the <a href="https://github.com/indeedeng/rabbitmq-operator/blob/master/examples/rabbitmq_operator.yaml">operator configuration yaml</a>. You should see a <code>rabbitmq-operator</code> pod spin up in the <code>rabbitmqs</code> namespace.</p>
+        <p><code>kubectl apply -f examples/rabbitmq_operator.yaml</code></p>
+
+        <h2>Deploying a cluster</h2>
+        <p>Apply the <a href="https://github.com/indeedeng/rabbitmq-operator/blob/master/examples/rabbitmq_instance.yaml">example RabbitMQCustomResource</a>. By default, this deploys a cluster with 3 instances in the <code>rabbitmqs</code> namespace.</p>
+        <p><code>kubectl apply -f examples/rabbitmq_instance.yaml</code></p>
+
+        <h2>Connecting to the cluster</h2>
+        <p>For each cluster, a service called <code>&lt;cluster name&gt;-svc</code> will be created. This is a standard (non-headless) service. Nodes will be added to the relevant Endpoints as soon as their healthcheck returns ok. A cluster named <code>myrabbitmq</code> in namespace <code>rabbitmqs</code> can be internally accessed at <code>myrabbitmq.rabbitmqs.svc.cluster.local</code>. Standard RabbitMQ ports are exposed.</p>
+
+        <p>To access a RabbitMQ cluster from outside the Kubernetes cluster, you need to either expose the Rabbit cluster using a NodePort or set <code>createLoadBalancer</code> to <code>true</code>. This will provision a LoadBalancer service with name <code>&lt;cluster-name&gt;-svc-lb</code> (assuming your environment supports it). You can then access your cluster using the LoadBalancer IP and standard RabbitMQ ports.</p>
+
+        <p>For more information on Service DNS and routing, see https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/.</p>
+
+        <h1>Custom Resource Schema</h1>
+        <h2>RabbitMQCustomResource Spec</h2>
+        <p><a href="https://github.com/indeedeng/rabbitmq-operator/blob/master/examples/rabbitmq_instance.yaml">An example.</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>rabbitMQImage</code></td>
+                    <td>string</td>
+                    <td>Name of RabbitMQ image</td>
+                </tr>
+                <tr>
+                    <td><code>initContainerImage</code></td>
+                    <td>string</td>
+                    <td>Name of initContainer image</td>
+                </tr>
+                <tr>
+                    <td><code>createLoadBalancer</code></td>
+                    <td>boolean</td>
+                    <td>Whether to create a LoadBalancer service</td>
+                </tr>
+                <tr>
+                    <td><code>replicas</code></td>
+                    <td>number</td>
+                    <td>Number of cluster nodes</td>
+                </tr>
+                <tr>
+                    <td><code>compute.cpuRequest</code></td>
+                    <td>string</td>
+                    <td>CPU request per node, ex: "500m"</td>
+                </tr>
+                <tr>
+                    <td><code>compute.memory</code></td>
+                    <td>string</td>
+                    <td>Memory request per node, ex: "512Mi"</td>
+                </tr>
+                <tr>
+                    <td><code>storage.storageClassName</code></td>
+                    <td>string</td>
+                    <td>Storage class to use for persistent storage (immutable)</td>
+                </tr>
+                <tr>
+                    <td><code>storage.limit</code></td>
+                    <td>string</td>
+                    <td>PersistentVolume size per cluster node (immutable)</td>
+                </tr>
+                <tr>
+                    <td><code>clusterSpec.highWatermarkFraction</code></td>
+                    <td>string</td>
+                    <td>RabbitMQ high watermark, ex: 0.4</td>
+                </tr>
+            </tbody>
+        </table>
+
+**Note:** Scaling replicas down is a dangerous operation. The operator does not currently make any safety guarantees when scaling down replicas.
+
+        <h1>Roadmap</h1>
+        <p>This operator is very much a work-in-progress. Features that we want to implement in the near future include:</p>
+        <ul>
+            <li>Shovel configuration</li>
+            <li>Policy configuration</li>
+            <li>Improvements to user management</li>
+        </ul>
+
+        <h1>Code of Conduct</h1>
+        <p>Operator for RabbitMQ is governed by the <a href="https://github.com/indeedeng/rabbitmq-operator/blob/master/CODE_OF_CONDUCT.md">Contributor Covenant v 1.4.1</a>.</p>
+
+        <h1>License</h1>
+        <p>Operator for RabbitMQ is licensed under the <a href="https://github.com/indeedeng/rabbitmq-operator/blob/master/LICENSE">Apache 2 License</a>.</p>
+    </body>
+</html>
