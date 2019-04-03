@@ -152,7 +152,6 @@ public class RabbitMQClusterFactory {
 
     private PodDisruptionBudget buildPodDisruptionBudget(final RabbitMQCustomResource resource) {
         final String namespace = resource.getMetadata().getNamespace();
-        final int maximumDownPods = Math.floorDiv(resource.getSpec().getReplicas(), 2);
         return new PodDisruptionBudgetBuilder()
                 .withNewMetadata()
                 .withName(String.format("%s-poddisruptionbudget", resource.getName()))
@@ -169,7 +168,7 @@ public class RabbitMQClusterFactory {
                 )
                 .endMetadata()
                 .withNewSpec()
-                .withMaxUnavailable(new IntOrString(maximumDownPods))
+                .withMaxUnavailable(new IntOrString(1))
                 .withNewSelector()
                 .withMatchLabels(Collections.singletonMap(Labels.Kubernetes.INSTANCE, resource.getName()))
                 .endSelector()
