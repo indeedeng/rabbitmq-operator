@@ -1,5 +1,6 @@
 package com.indeed.operators.rabbitmq.resources;
 
+import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQComputeResources;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -36,9 +37,9 @@ public class RabbitMQContainers {
                 .endResources()
                 .addNewEnv().withName("MY_POD_NAME").withNewValueFrom().withNewFieldRef().withFieldPath("metadata.name").endFieldRef().endValueFrom().endEnv()
                 .addNewEnv().withName("RABBITMQ_VM_MEMORY_HIGH_WATERMARK").withValue(highWatermark > 0 ? String.valueOf(highWatermark) : "0Mib").endEnv()
-                .addNewEnv().withName("RABBITMQ_ERLANG_COOKIE").withNewValueFrom().withNewSecretKeyRef("erlang-cookie", secretName, false).endValueFrom().endEnv()
-                .addNewEnv().withName("RABBITMQ_DEFAULT_USER").withNewValueFrom().withNewSecretKeyRef("username", secretName, false).endValueFrom().endEnv()
-                .addNewEnv().withName("RABBITMQ_DEFAULT_PASS").withNewValueFrom().withNewSecretKeyRef("password", secretName, false).endValueFrom().endEnv()
+                .addNewEnv().withName("RABBITMQ_ERLANG_COOKIE").withNewValueFrom().withNewSecretKeyRef(Constants.Secrets.ERLANG_COOKIE_KEY, secretName, false).endValueFrom().endEnv()
+                .addNewEnv().withName("RABBITMQ_DEFAULT_USER").withNewValueFrom().withNewSecretKeyRef(Constants.Secrets.USERNAME_KEY, secretName, false).endValueFrom().endEnv()
+                .addNewEnv().withName("RABBITMQ_DEFAULT_PASS").withNewValueFrom().withNewSecretKeyRef(Constants.Secrets.PASSWORD_KEY, secretName, false).endValueFrom().endEnv()
                 .addNewEnv().withName("K8S_SERVICE_NAME").withValue(discoveryServiceName).endEnv()
                 .addNewEnv().withName("RABBITMQ_USE_LONGNAME").withValue("true").endEnv()
                 .addNewEnv().withName("RABBITMQ_NODENAME").withValue(String.format("rabbit@$(MY_POD_NAME).%s.%s.svc.cluster.local", discoveryServiceName, namespace)).endEnv()

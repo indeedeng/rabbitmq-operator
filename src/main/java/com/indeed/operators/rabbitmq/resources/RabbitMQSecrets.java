@@ -1,6 +1,7 @@
 package com.indeed.operators.rabbitmq.resources;
 
 import com.google.common.base.Preconditions;
+import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.ModelFieldLookups;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
@@ -32,9 +33,9 @@ public class RabbitMQSecrets {
         final String password = randomStringGenerator.apply(30);
 
         return new SecretBuilder()
-                .addToStringData("erlang-cookie", erlangCookie)
-                .addToStringData("username", rabbitUsername)
-                .addToStringData("password", password)
+                .addToStringData(Constants.Secrets.ERLANG_COOKIE_KEY, erlangCookie)
+                .addToStringData(Constants.Secrets.USERNAME_KEY, rabbitUsername)
+                .addToStringData(Constants.Secrets.PASSWORD_KEY, password)
                 .withNewMetadata()
                     .withName(getClusterSecretName(clusterName))
                     .withNamespace(rabbit.getMetadata().getNamespace())
@@ -64,8 +65,8 @@ public class RabbitMQSecrets {
         final String password = randomStringGenerator.apply(30);
 
         return new SecretBuilder()
-                .addToStringData("username", username)
-                .addToStringData("password", password)
+                .addToStringData(Constants.Secrets.USERNAME_KEY, username)
+                .addToStringData(Constants.Secrets.PASSWORD_KEY, password)
                 .withNewMetadata()
                 .withName(getUserSecretName(username, clusterName))
                 .withNamespace(rabbit.getMetadata().getNamespace())

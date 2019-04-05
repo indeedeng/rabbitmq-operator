@@ -19,4 +19,10 @@ public class Constants {
         public static final int AMQP_PORT = 5672;
         public static final int MANAGEMENT_PORT = 15672;
     }
+
+    public static class Secrets {
+        public static final String USERNAME_KEY = "username";
+        public static final String PASSWORD_KEY = "password";
+        public static final String ERLANG_COOKIE_KEY = "erlang-cookie";
+    }
 }

@@ -1,6 +1,7 @@
 package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
 import com.google.common.collect.ImmutableSet;
+import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
@@ -76,14 +77,14 @@ public class ClusterUsersReconciler {
         final Secret userSecret = desiredUser.getUserSecret();
         secretsController.createOrUpdate(userSecret);
 
-        createOrUpdateUser(connectionInfo, desiredUser, passwordConverter.convertPasswordToHash(userSecret.getStringData().get("password")));
+        createOrUpdateUser(connectionInfo, desiredUser, passwordConverter.convertPasswordToHash(userSecret.getStringData().get(Constants.Secrets.PASSWORD_KEY)));
     }
 
     private void updateExistingUser(final RabbitMQUser desiredUser, final RabbitMQConnectionInfo connectionInfo) {
         final String username = desiredUser.getUsername();
         final Secret userSecret = secretsController.get(RabbitMQSecrets.getUserSecretName(username, desiredUser.getClusterMetadata().getName()), desiredUser.getClusterMetadata().getNamespace());
 
-        createOrUpdateUser(connectionInfo, desiredUser, passwordConverter.convertPasswordToHash(userSecret.getStringData().get("password")));
+        createOrUpdateUser(connectionInfo, desiredUser, passwordConverter.convertPasswordToHash(userSecret.getStringData().get(Constants.Secrets.PASSWORD_KEY)));
     }
 
     private void createOrUpdateUser(final RabbitMQConnectionInfo connectionInfo, final RabbitMQUser user, final String password) {

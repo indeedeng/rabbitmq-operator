@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.model.rabbitmq.api.BaseParameter;
 import com.indeed.operators.rabbitmq.model.rabbitmq.api.QueueState;
@@ -161,8 +162,8 @@ public class RabbitMQApiClient {
 
         Preconditions.checkNotNull(secret, String.format("Could not find secret with name [%s] in namespace [%s]", secretName, connectionInfo.getNamespace()));
 
-        final String username = secretsController.decodeSecretPayload(secret.getData().get("username"));
-        final String password = secretsController.decodeSecretPayload(secret.getData().get("password"));
+        final String username = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.USERNAME_KEY));
+        final String password = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.PASSWORD_KEY));
 
         return Credentials.basic(username, password);
     }

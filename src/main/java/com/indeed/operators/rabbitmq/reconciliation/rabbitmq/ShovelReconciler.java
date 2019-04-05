@@ -1,6 +1,7 @@
 package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
 import com.google.common.base.Preconditions;
+import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.ShovelSpec;
@@ -39,8 +40,8 @@ public class ShovelReconciler {
 
             Preconditions.checkNotNull(secret, String.format("Could not find secret with name [%s] in namespace [%s]", destSecretName, destSecretNamespace));
 
-            final String username = secretsController.decodeSecretPayload(secret.getData().get("username"));
-            final String password = secretsController.decodeSecretPayload(secret.getData().get("password"));
+            final String username = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.USERNAME_KEY));
+            final String password = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.PASSWORD_KEY));
 
             final List<String> uris = shovel.getDestination().getAddresses().stream()
                     .map(addr -> String.format("amqp://%s:%s@%s", username, password, addr))
