@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Storage Examples</title>
+    </head>
+    <body>
+        <h1>Storage Examples</h1>
+        <h2>Overview</h2>
+        <p>This page provides examples of different storage configurations.</p>
+
+        <h1>Default Storage</h1>
+        <p>Removing the <code>storageClassName</code> field from the RabbitMQ instance spec will result in each pod attempting to claim a PersistentVolume with the default storage class.</p>
+
+        <p>For this to work seamlessly, you'll need:</p>
+        <ul>
+            <li>A default storage class.</li>
+            <li>Dynamic provisioning, or a sufficient number of pre-made PersistentVolumes of appropriate size, in the default storage class.</li>
+        </ul>
+
+        <h1>Local Storage</h1>
+        <p>Local storage doesn't support dynamic provisioning, so you'll need to explicitly create PersistentVolumes.</p>
+
+        <h2>Create Volumes</h2>
+        <p>Local storage uses directories on the host machine.  Any path should work as long as the volumes provisioned below are also updated.  You'll need one directory for each RabbitMQ pod.</p>
+        <code>
+            $ mkdir -p /data/volume-0001
+            $ mkdir -p /data/volume-0002
+            $ mkdir -p /data/volume-0003
+        </code>
+
+        <h2>Provision Volumes</h2>
+        <p>Apply the following configuration to your cluster to provision the necessary volumes.  Again, if you're running more or less than three RabbitMQ instances, adjust the number appropriately.</p>
+        <code>
+            apiVersion: storage.k8s.io/v1
+            kind: StorageClass
+            metadata:
+              name: local-storage
+            provisioner:  kubernetes.io/no-provisioner
+            volumeBindingMode: WaitForFirstConsumer
+            ---
+            apiVersion: v1
+            kind: PersistentVolume
+            metadata:
+              name: pv0001
+            spec:
+              capacity:
+                storage: 1Gi
+              accessModes:
+                - ReadWriteOnce
+              persistentVolumeReclaimPolicy: Retain
+              storageClassName: local-storage
+              hostPath:
+                path: "/data/volume-0001"
+            ---
+            apiVersion: v1
+            kind: PersistentVolume
+            metadata:
+              name: pv0002
+            spec:
+              capacity:
+                storage: 1Gi
+              accessModes:
+                - ReadWriteOnce
+              persistentVolumeReclaimPolicy: Retain
+              storageClassName: local-storage
+              hostPath:
+                path: "/data/volume-0002"
+            ---
+            apiVersion: v1
+            kind: PersistentVolume
+            metadata:
+              name: pv0003
+            spec:
+              capacity:
+                storage: 1Gi
+              accessModes:
+                - ReadWriteOnce
+              persistentVolumeReclaimPolicy: Retain
+              storageClassName: local-storage
+              hostPath:
+                path: "/data/volume-0003"
+            ---
+        </code>
+
+        <h2>Update RabbitMQ Spec</h2>
+        <p>Change the <code>storageClassName</code> in your RabbitMQ instance spec to reference <code>local-storage</code> rather than <code>rook-ceph-block</code>.</p>
+
+        <h1>Rook-Managed Ceph Block Storage</h1>
+        <p>The example provided in this package assumes that <a href="https://rook.io/">Rook</a> is being used to provide <a href="https://ceph.com/ceph-storage/block-storage/">Ceph block storage</a>.  We found <a href="https://github.com/rook/rook/tree/master/cluster/examples/kubernetes/ceph">these examples</a> to be a good starting point for getting this up and running in our Kubernetes cluster.</p>
+
+    </body>
+</html>

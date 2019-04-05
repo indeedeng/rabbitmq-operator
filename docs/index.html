@@ -52,6 +52,7 @@
                     <th>Field</th>
                     <th>Type</th>
                     <th>Description</th>
+                    <th>Notes</th>
                 </tr>
             </thead>
             <tbody>
@@ -59,51 +60,60 @@
                     <td><code>rabbitMQImage</code></td>
                     <td>string</td>
                     <td>Name of RabbitMQ image</td>
+                    <td/>
                 </tr>
                 <tr>
                     <td><code>initContainerImage</code></td>
                     <td>string</td>
                     <td>Name of initContainer image</td>
+                    <td/>
                 </tr>
                 <tr>
                     <td><code>createLoadBalancer</code></td>
                     <td>boolean</td>
                     <td>Whether to create a LoadBalancer service</td>
+                    <td/>
                 </tr>
                 <tr>
                     <td><code>replicas</code></td>
                     <td>number</td>
                     <td>Number of cluster nodes</td>
+                    <td/>
                 </tr>
                 <tr>
                     <td><code>compute.cpuRequest</code></td>
                     <td>string</td>
                     <td>CPU request per node, ex: "500m"</td>
+                    <td/>
                 </tr>
                 <tr>
                     <td><code>compute.memory</code></td>
                     <td>string</td>
                     <td>Memory request per node, ex: "512Mi"</td>
+                    <td/>
                 </tr>
                 <tr>
-                    <td><code>storage.storageClassName</code></td>
+                    <td><a href="storage.html"><code>storage.storageClassName</code></a></td>
                     <td>string</td>
                     <td>Storage class to use for persistent storage (immutable)</td>
+                    <td>Optional; if omitted, attempts to use the default storage class</td>
                 </tr>
                 <tr>
                     <td><code>storage.limit</code></td>
                     <td>string</td>
                     <td>PersistentVolume size per cluster node (immutable)</td>
+                    <td/>
                 </tr>
                 <tr>
                     <td><code>clusterSpec.highWatermarkFraction</code></td>
                     <td>string</td>
                     <td>RabbitMQ high watermark, ex: 0.4</td>
+                    <td/>
                 </tr>
             </tbody>
         </table>
 
-**Note:** Scaling replicas down is a dangerous operation. The operator does not currently make any safety guarantees when scaling down replicas.
+        <p><b>Note:</b> Scaling replicas down is a dangerous operation. The operator does not currently make any safety guarantees when scaling down replicas.</p>
 
         <h1>Roadmap</h1>
         <p>This operator is very much a work-in-progress. Features that we want to implement in the near future include:</p>
