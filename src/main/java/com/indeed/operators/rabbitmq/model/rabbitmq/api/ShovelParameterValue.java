@@ -1,4 +1,4 @@
-package com.indeed.operators.rabbitmq.model.rabbitmq;
+package com.indeed.operators.rabbitmq.model.rabbitmq.api;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;

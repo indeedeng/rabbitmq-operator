@@ -1,7 +1,7 @@
 package com.indeed.operators.rabbitmq.operations;
 
 import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
-import com.indeed.operators.rabbitmq.model.rabbitmq.QueueState;
+import com.indeed.operators.rabbitmq.model.rabbitmq.api.QueueState;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

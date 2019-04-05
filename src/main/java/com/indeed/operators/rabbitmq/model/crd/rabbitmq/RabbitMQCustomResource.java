@@ -44,9 +44,4 @@ public class RabbitMQCustomResource extends CustomResource {
     public String getName() {
         return this.getMetadata().getName();
     }
-
-    @JsonIgnore
-    public String getProductGroup() {
-        return this.getMetadata().getAnnotations().get("productGroup");
-    }
 }

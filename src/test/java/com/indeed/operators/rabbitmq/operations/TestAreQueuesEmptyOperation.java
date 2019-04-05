@@ -2,7 +2,7 @@ package com.indeed.operators.rabbitmq.operations;
 
 import com.google.common.collect.Lists;
 import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
-import com.indeed.operators.rabbitmq.model.rabbitmq.QueueState;
+import com.indeed.operators.rabbitmq.model.rabbitmq.api.QueueState;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

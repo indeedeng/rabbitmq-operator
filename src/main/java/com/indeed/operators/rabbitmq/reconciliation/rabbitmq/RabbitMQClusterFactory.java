@@ -1,9 +1,15 @@
-package com.indeed.operators.rabbitmq.resources;
+package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
 import com.indeed.operators.rabbitmq.model.Labels;
+import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceSpec;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQStorageResources;
+import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQUser;
+import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
+import com.indeed.operators.rabbitmq.resources.RabbitMQPods;
+import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
+import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.OwnerReference;
@@ -15,7 +21,9 @@ import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
 import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudgetBuilder;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.indeed.operators.rabbitmq.Constants.RABBITMQ_STORAGE_NAME;
 
@@ -65,6 +73,8 @@ public class RabbitMQClusterFactory {
 
         final PodDisruptionBudget podDisruptionBudget = buildPodDisruptionBudget(resource);
 
+        final List<RabbitMQUser> users = buildUsers(resource);
+
         return new RabbitMQCluster(
                 clusterName,
                 namespace,
@@ -74,7 +84,8 @@ public class RabbitMQClusterFactory {
                 loadBalancerService,
                 statefulSet,
                 podDisruptionBudget,
-                resource.getSpec().getClusterSpec().getShovels()
+                resource.getSpec().getClusterSpec().getShovels(),
+                users
         );
     }
 
@@ -174,5 +185,25 @@ public class RabbitMQClusterFactory {
                 .endSelector()
                 .endSpec()
                 .build();
+    }
+
+    private List<RabbitMQUser> buildUsers(final RabbitMQCustomResource resource) {
+        return resource.getSpec().getClusterSpec().getUsers().stream()
+                .map(user -> new RabbitMQUser(
+                        user.getUsername(),
+                        rabbitMQSecrets.createUserSecret(user.getUsername(), resource),
+                        resource.getMetadata(),
+                        new OwnerReference(
+                                resource.getApiVersion(),
+                                true,
+                                true,
+                                resource.getKind(),
+                                resource.getName(),
+                                resource.getMetadata().getUid()
+                        ),
+                        user.getVhosts(),
+                        user.getTags()
+                ))
+                .collect(Collectors.toList());
     }
 }
