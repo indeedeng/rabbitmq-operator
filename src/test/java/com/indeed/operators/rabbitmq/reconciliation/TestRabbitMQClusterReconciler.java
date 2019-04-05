@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import static com.indeed.operators.rabbitmq.Constants.RABBITMQ_STORAGE_NAME;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -149,5 +150,6 @@ public class TestRabbitMQClusterReconciler {
         reconciler.reconcile(rec);
 
         verify(persistentVolumeClaimController).delete(RABBITMQ_STORAGE_NAME + "-" + NAME + "-3", NAMESPACE);
+        verifyNoMoreInteractions(persistentVolumeClaimController);
     }
 }
