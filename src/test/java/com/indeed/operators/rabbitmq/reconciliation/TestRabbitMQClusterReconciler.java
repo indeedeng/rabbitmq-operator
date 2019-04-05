@@ -149,13 +149,9 @@ public class TestRabbitMQClusterReconciler {
                 )
         );
 
-        when(statefulSetController.get(NAME, NAMESPACE))
-                // This call happens during reconcileKubernetesObjects().  It reflects the current (unscaled) state of
-                // the cluster.
-                .thenReturn(originalStatefulSet)
-                // This call then happens during deleteDanglingPvcs().  By this point the StatefulSet has been patched,
-                // so it reflects the scaled state of the cluster.
-                .thenReturn(scaledStatefulSet);
+        // This call will happen twice.  In both cases it will occur before the StatefulSet has been patched, hence it
+        // will reflect the origin unscaled replica count.
+        when(statefulSetController.get(NAME, NAMESPACE)).thenReturn(originalStatefulSet);
 
         reconciler.reconcile(rec);
 

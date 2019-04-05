@@ -1,6 +1,5 @@
 package com.indeed.operators.rabbitmq.reconciliation;
 
-import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.controller.PersistentVolumeClaimController;
 import com.indeed.operators.rabbitmq.controller.PodDisruptionBudgetController;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
@@ -9,7 +8,6 @@ import com.indeed.operators.rabbitmq.controller.StatefulSetController;
 import com.indeed.operators.rabbitmq.controller.crd.RabbitMQResourceController;
 import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
-import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
 import com.indeed.operators.rabbitmq.resources.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.resources.RabbitMQClusterFactory;
@@ -19,7 +17,6 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -67,9 +64,10 @@ public class RabbitMQClusterReconciler {
 
         if (shouldReconcile(resource)) {
             final RabbitMQCluster cluster = clusterFactory.fromCustomResource(resource);
+            final int currentReplicaCount = determineCurrentReplicaCount(resource);
 
             reconcileKubernetesObjects(cluster);
-            deleteDanglingPvcs(resource);
+            deleteDanglingPvcs(resource, currentReplicaCount);
 
             shovelReconciler.reconcile(cluster);
 
@@ -98,15 +96,13 @@ public class RabbitMQClusterReconciler {
         podDisruptionBudgetController.createOrUpdate(cluster.getPodDisruptionBudget());
     }
 
-    private void deleteDanglingPvcs(final RabbitMQCustomResource resource) {
+    private void deleteDanglingPvcs(final RabbitMQCustomResource resource, final int currentReplicaCount) {
         final String clusterName = resource.getMetadata().getName();
         // TODO: This is not ideal.  In a perfect world we would set the owner reference of each persistent
         // volume claim to the pod that owns it, and then things would be cleaned up automatically as the
         // cluster scales down.  But we don't actually have those IDs, so instead we set the owner to the
         // stateful set.  They would eventually be cleaned up when the stateful set is deleted, but to
         // conserve resources we manually delete them now if necessary.
-        final StatefulSet existing = statefulSetController.get(clusterName, resource.getMetadata().getNamespace());
-        final int currentReplicaCount = existing.getSpec().getReplicas();
         if (resource.getSpec().getReplicas() < currentReplicaCount) {
             log.info("Deleting dangling PersistentVolumeClaims");
             for (int index = resource.getSpec().getReplicas(); index < currentReplicaCount; index++) {
@@ -114,6 +110,15 @@ public class RabbitMQClusterReconciler {
                 persistentVolumeClaimController.delete(name, resource.getMetadata().getNamespace());
             }
         }
+    }
+
+    private int determineCurrentReplicaCount(final RabbitMQCustomResource resource) {
+        final StatefulSet existing = statefulSetController.get(resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+        if (null != existing) {
+            return existing.getSpec().getReplicas();
+        }
+
+        return 0;
     }
 
     private boolean shouldReconcile(final RabbitMQCustomResource resource) {
