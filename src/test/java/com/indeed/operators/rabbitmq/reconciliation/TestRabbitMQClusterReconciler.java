@@ -118,13 +118,6 @@ public class TestRabbitMQClusterReconciler {
                 new StatefulSetSpecBuilder().withReplicas(4).build(),
                 null
         );
-        final StatefulSet scaledStatefulSet = new StatefulSet(
-                "apps/v1",
-                "StatefulSet",
-                new ObjectMetaBuilder().build(),
-                new StatefulSetSpecBuilder().withReplicas(3).build(),
-                null
-        );
 
         final RabbitMQCustomResource scaledResource = new RabbitMQCustomResourceBuilder()
                 .withMetadata(
