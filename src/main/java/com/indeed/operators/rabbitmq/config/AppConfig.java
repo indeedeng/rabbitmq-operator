@@ -3,7 +3,6 @@ package com.indeed.operators.rabbitmq.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.indeed.operators.rabbitmq.NetworkPartitionWatcher;
 import com.indeed.operators.rabbitmq.RabbitMQEventWatcher;
-import com.indeed.operators.rabbitmq.RabbitMQUserEventWatcher;
 import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
 import com.indeed.operators.rabbitmq.controller.PersistentVolumeClaimController;
@@ -14,16 +13,15 @@ import com.indeed.operators.rabbitmq.controller.ServicesController;
 import com.indeed.operators.rabbitmq.controller.StatefulSetController;
 import com.indeed.operators.rabbitmq.controller.crd.NetworkPartitionResourceController;
 import com.indeed.operators.rabbitmq.controller.crd.RabbitMQResourceController;
-import com.indeed.operators.rabbitmq.controller.crd.RabbitMQUserResourceController;
 import com.indeed.operators.rabbitmq.executor.ClusterAwareExecutor;
 import com.indeed.operators.rabbitmq.operations.AreQueuesEmptyOperation;
 import com.indeed.operators.rabbitmq.reconciliation.ClusterReconciliationOrchestrator;
 import com.indeed.operators.rabbitmq.reconciliation.NetworkPartitionReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.RabbitMQClusterReconciler;
-import com.indeed.operators.rabbitmq.reconciliation.RabbitMQUserReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.lock.NamedSemaphores;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
-import com.indeed.operators.rabbitmq.resources.RabbitMQClusterFactory;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
 import com.indeed.operators.rabbitmq.resources.RabbitMQPods;
 import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
@@ -139,9 +137,10 @@ public class AppConfig {
             final StatefulSetController statefulSetController,
             final PodDisruptionBudgetController podDisruptionBudgetController,
             final PersistentVolumeClaimController persistentVolumeClaimController,
-            final ShovelReconciler shovelReconciler
+            final ShovelReconciler shovelReconciler,
+            final ClusterUsersReconciler usersReconciler
     ) {
-        return new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, shovelReconciler);
+        return new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, shovelReconciler, usersReconciler);
     }
 
     @Bean
@@ -162,25 +161,12 @@ public class AppConfig {
     }
 
     @Bean
-    public RabbitMQUserEventWatcher userEventWatcher(
-            final RabbitMQUserReconciler reconciler,
-            final RabbitMQUserResourceController controller,
-            final RabbitMQResourceController clusterController,
-            final ClusterReconciliationOrchestrator orchestrator,
-            final RabbitMQApiClient apiClient
-    ) {
-        return new RabbitMQUserEventWatcher(reconciler, controller, clusterController, orchestrator, apiClient);
-    }
-
-    @Bean
-    public RabbitMQUserReconciler rabbitMQUserReconciler(
-            final RabbitMQSecrets rabbitMQSecrets,
-            final RabbitMQUserResourceController controller,
+    public ClusterUsersReconciler rabbitMQUserReconciler(
             final SecretsController secretsController,
             final RabbitMQApiClient apiClient,
             final RabbitMQPasswordConverter passwordConverter
     ) {
-        return new RabbitMQUserReconciler(rabbitMQSecrets, controller, secretsController, apiClient, passwordConverter);
+        return new ClusterUsersReconciler(secretsController, apiClient, passwordConverter);
     }
 
     @Bean

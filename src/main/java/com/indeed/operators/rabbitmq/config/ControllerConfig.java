@@ -9,7 +9,6 @@ import com.indeed.operators.rabbitmq.controller.ServicesController;
 import com.indeed.operators.rabbitmq.controller.StatefulSetController;
 import com.indeed.operators.rabbitmq.controller.crd.NetworkPartitionResourceController;
 import com.indeed.operators.rabbitmq.controller.crd.RabbitMQResourceController;
-import com.indeed.operators.rabbitmq.controller.crd.RabbitMQUserResourceController;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -56,14 +55,6 @@ public class ControllerConfig {
             @Qualifier("LABELS_TO_WATCH") final Map<String, String> labelsToWatch
     ) {
         return new NetworkPartitionResourceController(client, labelsToWatch);
-    }
-
-    @Bean
-    public RabbitMQUserResourceController rabbitUserController(
-            final KubernetesClient client,
-            @Qualifier("LABELS_TO_WATCH") final Map<String, String> labelsToWatch
-    ) {
-        return new RabbitMQUserResourceController(client, labelsToWatch);
     }
 
     @Bean

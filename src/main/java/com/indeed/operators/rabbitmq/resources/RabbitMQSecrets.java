@@ -4,12 +4,12 @@ import com.google.common.base.Preconditions;
 import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.ModelFieldLookups;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
-import com.indeed.operators.rabbitmq.model.crd.user.RabbitMQUserCustomResource;
-import com.indeed.operators.rabbitmq.model.crd.user.RabbitMQUserCustomResourceSpec;
+import com.indeed.operators.rabbitmq.model.crd.rabbitmq.UserSpec;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 public class RabbitMQSecrets {
@@ -33,8 +33,8 @@ public class RabbitMQSecrets {
 
         return new SecretBuilder()
                 .addToStringData("erlang-cookie", erlangCookie)
-                .addToStringData("default-username", rabbitUsername)
-                .addToStringData("default-password", password)
+                .addToStringData("username", rabbitUsername)
+                .addToStringData("password", password)
                 .withNewMetadata()
                     .withName(getClusterSecretName(clusterName))
                     .withNamespace(rabbit.getMetadata().getNamespace())
@@ -56,31 +56,31 @@ public class RabbitMQSecrets {
                 .build();
     }
 
-    public Secret createUserSecret(final RabbitMQUserCustomResource user) {
-        final String username = user.getName();
-        final RabbitMQUserCustomResourceSpec spec = user.getSpec();
-        final String clusterName = spec.getClusterName();
-
+    public Secret createUserSecret(
+            final String username,
+            final RabbitMQCustomResource rabbit
+    ) {
+        final String clusterName = rabbit.getName();
         final String password = randomStringGenerator.apply(30);
 
         return new SecretBuilder()
-                .addToStringData("username", user.getName())
+                .addToStringData("username", username)
                 .addToStringData("password", password)
                 .withNewMetadata()
                 .withName(getUserSecretName(username, clusterName))
-                .withNamespace(user.getMetadata().getNamespace())
+                .withNamespace(rabbit.getMetadata().getNamespace())
                 .addToLabels(Labels.Kubernetes.INSTANCE, clusterName)
                 .addToLabels(Labels.Kubernetes.MANAGED_BY, Labels.Values.RABBITMQ_OPERATOR)
                 .addToLabels(Labels.Kubernetes.PART_OF, Labels.Values.RABBITMQ)
-                .addToLabels(Labels.Indeed.getIndeedLabels(user))
+                .addToLabels(Labels.Indeed.getIndeedLabels(rabbit))
                 .withOwnerReferences(
                         new OwnerReference(
-                                user.getApiVersion(),
+                                rabbit.getApiVersion(),
                                 true,
                                 true,
-                                user.getKind(),
-                                user.getName(),
-                                user.getMetadata().getUid()
+                                rabbit.getKind(),
+                                rabbit.getName(),
+                                rabbit.getMetadata().getUid()
                         )
                 )
                 .endMetadata()

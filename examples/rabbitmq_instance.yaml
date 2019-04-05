@@ -16,3 +16,13 @@ spec:
     limit: "1Gi"
   clusterSpec:
     highWatermarkFraction: 0.4
+    users:
+      - username: mynewadmin
+        tags:
+          - "administrator"
+        vhosts:
+          - vhostName: "/"
+            permissions:
+              configure: ".*"
+              write: ".*"
+              read: ".*"
