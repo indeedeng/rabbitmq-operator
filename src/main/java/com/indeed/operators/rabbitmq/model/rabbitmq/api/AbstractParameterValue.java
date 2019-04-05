@@ -1,4 +1,4 @@
-package com.indeed.operators.rabbitmq.model.rabbitmq;
+package com.indeed.operators.rabbitmq.model.rabbitmq.api;
 
 /**
  * This class is the common base for all objects that live under the /api/parameters endpoint of the
@@ -7,7 +7,7 @@ package com.indeed.operators.rabbitmq.model.rabbitmq;
  *
  * If you want automatic JSON serialization/deserialization (you almost certainly do), add a new
  * {@link com.fasterxml.jackson.annotation.JsonSubTypes.Type} declaration on the "value" field of the
- * {@link BaseParameter#BaseParameter(AbstractParameterValue, String, String, String)} constructor. It should look like
+ * {@link BaseParameter#(AbstractParameterValue, String, String, String)} constructor. It should look like
  * this:
  * <pre>
  *     @JsonSubTypes(value = {

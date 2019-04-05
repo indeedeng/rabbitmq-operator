@@ -6,14 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
-import com.indeed.operators.rabbitmq.model.crd.rabbitmq.ShovelSpec;
-import com.indeed.operators.rabbitmq.model.rabbitmq.BaseParameter;
-import com.indeed.operators.rabbitmq.model.rabbitmq.QueueState;
+import com.indeed.operators.rabbitmq.model.rabbitmq.api.BaseParameter;
+import com.indeed.operators.rabbitmq.model.rabbitmq.api.QueueState;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
-import com.indeed.operators.rabbitmq.model.rabbitmq.ShovelParameterValue;
-import com.indeed.operators.rabbitmq.model.rabbitmq.User;
-import com.indeed.operators.rabbitmq.model.rabbitmq.VHostPermissions;
+import com.indeed.operators.rabbitmq.model.rabbitmq.api.ShovelParameterValue;
+import com.indeed.operators.rabbitmq.model.rabbitmq.api.User;
+import com.indeed.operators.rabbitmq.model.rabbitmq.VhostOperationPermissions;
 import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
 import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -33,7 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class RabbitMQApiClient {
     private static final Logger log = LoggerFactory.getLogger(RabbitMQApiClient.class);
@@ -107,7 +106,7 @@ public class RabbitMQApiClient {
         httpClient.newCall(req).execute();
     }
 
-    public void updateVHostPermissions(final RabbitMQConnectionInfo connectionInfo, final String vhost, final String username, final VHostPermissions permissions) throws IOException {
+    public void updateVHostPermissions(final RabbitMQConnectionInfo connectionInfo, final String vhost, final String username, final VhostOperationPermissions permissions) throws IOException {
         final String url = String.format("%s/permissions/%s/%s", buildRootUrl(connectionInfo), encodeString(vhost), username);
 
         final Request req = new Request.Builder()
@@ -163,8 +162,8 @@ public class RabbitMQApiClient {
 
         Preconditions.checkNotNull(secret, String.format("Could not find secret with name [%s] in namespace [%s]", secretName, connectionInfo.getNamespace()));
 
-        final String username = secretsController.decodeSecretPayload(secret.getData().get("default-username"));
-        final String password = secretsController.decodeSecretPayload(secret.getData().get("default-password"));
+        final String username = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.USERNAME_KEY));
+        final String password = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.PASSWORD_KEY));
 
         return Credentials.basic(username, password);
     }

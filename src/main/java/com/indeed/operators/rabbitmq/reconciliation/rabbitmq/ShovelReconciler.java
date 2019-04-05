@@ -1,13 +1,14 @@
 package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
 import com.google.common.base.Preconditions;
+import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.ShovelSpec;
-import com.indeed.operators.rabbitmq.model.rabbitmq.BaseParameter;
+import com.indeed.operators.rabbitmq.model.rabbitmq.api.BaseParameter;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
-import com.indeed.operators.rabbitmq.model.rabbitmq.ShovelParameterValue;
-import com.indeed.operators.rabbitmq.resources.RabbitMQCluster;
+import com.indeed.operators.rabbitmq.model.rabbitmq.api.ShovelParameterValue;
+import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
 import io.fabric8.kubernetes.api.model.Secret;
 import org.slf4j.Logger;
@@ -39,8 +40,8 @@ public class ShovelReconciler {
 
             Preconditions.checkNotNull(secret, String.format("Could not find secret with name [%s] in namespace [%s]", destSecretName, destSecretNamespace));
 
-            final String username = secretsController.decodeSecretPayload(secret.getData().get("default-username"));
-            final String password = secretsController.decodeSecretPayload(secret.getData().get("default-password"));
+            final String username = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.USERNAME_KEY));
+            final String password = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.PASSWORD_KEY));
 
             final List<String> uris = shovel.getDestination().getAddresses().stream()
                     .map(addr -> String.format("amqp://%s:%s@%s", username, password, addr))

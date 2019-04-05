@@ -8,9 +8,10 @@ import com.indeed.operators.rabbitmq.controller.StatefulSetController;
 import com.indeed.operators.rabbitmq.controller.crd.RabbitMQResourceController;
 import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
+import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
-import com.indeed.operators.rabbitmq.resources.RabbitMQCluster;
-import com.indeed.operators.rabbitmq.resources.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
@@ -33,6 +34,7 @@ public class RabbitMQClusterReconciler {
     private final PodDisruptionBudgetController podDisruptionBudgetController;
     private final PersistentVolumeClaimController persistentVolumeClaimController;
     private final ShovelReconciler shovelReconciler;
+    private final ClusterUsersReconciler usersReconciler;
 
     public RabbitMQClusterReconciler(
             final RabbitMQClusterFactory clusterFactory,
@@ -42,7 +44,8 @@ public class RabbitMQClusterReconciler {
             final StatefulSetController statefulSetController,
             final PodDisruptionBudgetController podDisruptionBudgetController,
             final PersistentVolumeClaimController persistentVolumeClaimController,
-            final ShovelReconciler shovelReconciler
+            final ShovelReconciler shovelReconciler,
+            final ClusterUsersReconciler usersReconciler
     ) {
         this.clusterFactory = clusterFactory;
         this.controller = controller;
@@ -52,6 +55,7 @@ public class RabbitMQClusterReconciler {
         this.podDisruptionBudgetController = podDisruptionBudgetController;
         this.persistentVolumeClaimController = persistentVolumeClaimController;
         this.shovelReconciler = shovelReconciler;
+        this.usersReconciler = usersReconciler;
     }
 
     public void reconcile(final Reconciliation reconciliation) throws InterruptedException {
@@ -70,6 +74,7 @@ public class RabbitMQClusterReconciler {
             deleteDanglingPvcs(resource, currentReplicaCount);
 
             shovelReconciler.reconcile(cluster);
+            usersReconciler.reconcile(cluster);
 
             log.info("Reconciliation complete!");
         } else {

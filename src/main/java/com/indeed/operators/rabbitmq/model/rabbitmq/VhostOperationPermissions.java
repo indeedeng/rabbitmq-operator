@@ -7,14 +7,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Objects;
 
 @JsonDeserialize(using = JsonDeserializer.None.class)
-public class VHostPermissions {
+public class VhostOperationPermissions {
 
     private final String configure;
     private final String write;
     private final String read;
 
     @JsonCreator
-    public VHostPermissions(
+    public VhostOperationPermissions(
             @JsonProperty("configure") final String configure,
             @JsonProperty("write") final String write,
             @JsonProperty("read") final String read
@@ -40,7 +40,7 @@ public class VHostPermissions {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        VHostPermissions that = (VHostPermissions) o;
+        VhostOperationPermissions that = (VhostOperationPermissions) o;
         return Objects.equal(configure, that.configure) &&
                 Objects.equal(write, that.write) &&
                 Objects.equal(read, that.read);

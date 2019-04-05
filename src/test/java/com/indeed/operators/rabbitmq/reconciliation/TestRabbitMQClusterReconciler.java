@@ -12,9 +12,10 @@ import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceBuilder;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceSpecBuilder;
+import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
-import com.indeed.operators.rabbitmq.resources.RabbitMQCluster;
-import com.indeed.operators.rabbitmq.resources.RabbitMQClusterFactory;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetSpecBuilder;
@@ -63,11 +64,14 @@ public class TestRabbitMQClusterReconciler {
     @Mock
     private ShovelReconciler shovelReconciler;
 
+    @Mock
+    private ClusterUsersReconciler usersReconciler;
+
     private RabbitMQClusterReconciler reconciler;
 
     @BeforeEach
     void setup() {
-        reconciler = new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, shovelReconciler);
+        reconciler = new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, shovelReconciler, usersReconciler);
     }
 
     @Test
@@ -139,7 +143,7 @@ public class TestRabbitMQClusterReconciler {
         when(clusterFactory.fromCustomResource(scaledResource)).thenReturn(
                 new RabbitMQCluster(
                         // Most of these parameters don't matter.
-                        NAME, NAMESPACE, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList()
+                        NAME, NAMESPACE, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList()
                 )
         );
 

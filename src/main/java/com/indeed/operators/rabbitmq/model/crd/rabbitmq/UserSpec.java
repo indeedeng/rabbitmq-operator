@@ -1,4 +1,4 @@
-package com.indeed.operators.rabbitmq.model.crd.user;
+package com.indeed.operators.rabbitmq.model.crd.rabbitmq;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,30 +17,30 @@ import java.util.List;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         editableEnabled = false
 )
-@JsonPropertyOrder({"clusterName", "vHosts", "tags"})
+@JsonPropertyOrder({"username", "vhosts", "tags"})
 @JsonDeserialize(using = JsonDeserializer.None.class)
-public class RabbitMQUserCustomResourceSpec {
-    final String clusterName;
-    final List<RabbitMQVHostUser> vHosts;
-    final List<String> tags;
+public class UserSpec {
+    private final String username;
+    private final List<VhostPermissions> vhosts;
+    private final List<String> tags;
 
     @JsonCreator
-    public RabbitMQUserCustomResourceSpec(
-        @JsonProperty("clusterName") final String clusterName,
-        @JsonProperty("vHosts") final List<RabbitMQVHostUser> vHosts,
-        @JsonProperty("tags") final List<String> tags
+    public UserSpec(
+            @JsonProperty("username") final String username,
+            @JsonProperty("vhosts") final List<VhostPermissions> vhosts,
+            @JsonProperty("tags") final List<String> tags
     ) {
-        this.clusterName = clusterName;
-        this.vHosts = ImmutableList.copyOf(vHosts);
+        this.username = username;
+        this.vhosts = ImmutableList.copyOf(vhosts);
         this.tags = ImmutableList.copyOf(tags);
     }
 
-    public String getClusterName() {
-        return clusterName;
+    public String getUsername() {
+        return username;
     }
 
-    public List<RabbitMQVHostUser> getVHosts() {
-        return vHosts;
+    public List<VhostPermissions> getVhosts() {
+        return vhosts;
     }
 
     public List<String> getTags() {
