@@ -5,12 +5,10 @@ import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.ModelFieldLookups;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
-import com.indeed.operators.rabbitmq.model.crd.rabbitmq.UserSpec;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 public class RabbitMQSecrets {
@@ -29,11 +27,9 @@ public class RabbitMQSecrets {
     public Secret createClusterSecret(final RabbitMQCustomResource rabbit) {
         final String clusterName = ModelFieldLookups.getName(rabbit);
 
-        final String erlangCookie = randomStringGenerator.apply(50);
         final String password = randomStringGenerator.apply(30);
 
         return new SecretBuilder()
-                .addToStringData(Constants.Secrets.ERLANG_COOKIE_KEY, erlangCookie)
                 .addToStringData(Constants.Secrets.USERNAME_KEY, rabbitUsername)
                 .addToStringData(Constants.Secrets.PASSWORD_KEY, password)
                 .withNewMetadata()
@@ -88,11 +84,43 @@ public class RabbitMQSecrets {
                 .build();
     }
 
+    public Secret createErlangCookieSecret(final RabbitMQCustomResource rabbit) {
+        final String clusterName = ModelFieldLookups.getName(rabbit);
+
+        final String erlangCookie = randomStringGenerator.apply(50);
+
+        return new SecretBuilder()
+                .addToStringData(Constants.Secrets.ERLANG_COOKIE_KEY, erlangCookie)
+                .withNewMetadata()
+                .withName(getErlangCookieSecretName(clusterName))
+                .withNamespace(rabbit.getMetadata().getNamespace())
+                .addToLabels(Labels.Kubernetes.INSTANCE, clusterName)
+                .addToLabels(Labels.Kubernetes.MANAGED_BY, Labels.Values.RABBITMQ_OPERATOR)
+                .addToLabels(Labels.Kubernetes.PART_OF, Labels.Values.RABBITMQ)
+                .addToLabels(Labels.Indeed.getIndeedLabels(rabbit))
+                .withOwnerReferences(
+                        new OwnerReference(
+                                rabbit.getApiVersion(),
+                                true,
+                                true,
+                                rabbit.getKind(),
+                                rabbit.getName(),
+                                rabbit.getMetadata().getUid()
+                        )
+                )
+                .endMetadata()
+                .build();
+    }
+
     public static String getClusterSecretName(final String rabbitName) {
         return String.format("%s-runtime-secret", rabbitName);
     }
 
     public static String getUserSecretName(final String username, final String rabbitName) {
         return String.format("%s-%s-user-secret", username, rabbitName);
+    }
+
+    public static String getErlangCookieSecretName(final String rabbitName) {
+        return String.format("%s-erlang-cookie", rabbitName);
     }
 }

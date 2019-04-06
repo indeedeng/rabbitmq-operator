@@ -4,7 +4,6 @@ public class Constants {
 
     public static final String RABBITMQ_CRD_NAME = "rabbitmqs.indeed.com";
     public static final String RABBITMQ_NETWORK_PARTITION_CRD_NAME = "rabbitmqnetworkpartitions.indeed.com";
-    public static final String RABBITMQ_USER_CRD_NAME = "rabbitmqusers.indeed.com";
 
     public static final String RABBITMQ_STORAGE_NAME = "rabbitmq-storage";
 
