@@ -25,3 +25,5 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+ext['indeed.publish.name'] = 'rabbmitq-operator-model'
