@@ -29,6 +29,8 @@ spec:
               type: string
             createLoadBalancer:
               type: boolean
+            preserveOrphanPVCs:
+              type: boolean
             replicas:
               type: number
               minimum: 0

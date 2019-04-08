@@ -71,7 +71,9 @@ public class RabbitMQClusterReconciler {
             final int currentReplicaCount = determineCurrentReplicaCount(resource);
 
             reconcileKubernetesObjects(cluster);
-            deleteDanglingPvcs(resource, currentReplicaCount);
+            if (!resource.getSpec().isPreserveOrphanPVCs()) {
+                deleteDanglingPvcs(resource, currentReplicaCount);
+            }
 
             shovelReconciler.reconcile(cluster);
             usersReconciler.reconcile(cluster);
@@ -103,13 +105,22 @@ public class RabbitMQClusterReconciler {
         podDisruptionBudgetController.createOrUpdate(cluster.getPodDisruptionBudget());
     }
 
+    /**
+     * Delete any persistent volume claims that were orphaned by the process of scaling down a
+     * cluster.
+     *
+     * This is not ideal.  In a perfect world we would set the owner reference of each persistent
+     * volume claim to the pod that owns it, and then things would be cleaned up automatically as
+     * the cluster scales down.  But we don't actually have those IDs, so instead we set the owner
+     * to the stateful set.  They would eventually be cleaned up when the stateful set is deleted,
+     * but to conserve resources we manually delete them now.
+     *
+     * @param resource the RabbitMQ cluster being scaled.
+     * @param currentReplicaCount the number of replicas in the cluster prior to the scaling
+     *                            operation.
+     */
     private void deleteDanglingPvcs(final RabbitMQCustomResource resource, final int currentReplicaCount) {
         final String clusterName = resource.getMetadata().getName();
-        // TODO: This is not ideal.  In a perfect world we would set the owner reference of each persistent
-        // volume claim to the pod that owns it, and then things would be cleaned up automatically as the
-        // cluster scales down.  But we don't actually have those IDs, so instead we set the owner to the
-        // stateful set.  They would eventually be cleaned up when the stateful set is deleted, but to
-        // conserve resources we manually delete them now if necessary.
         if (resource.getSpec().getReplicas() < currentReplicaCount) {
             log.info("Deleting dangling PersistentVolumeClaims");
             for (int index = resource.getSpec().getReplicas(); index < currentReplicaCount; index++) {
