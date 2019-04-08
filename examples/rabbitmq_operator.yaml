@@ -179,16 +179,6 @@ rules:
       - delete
       - list
       - patch
-  - apiGroups:
-      - indeed.com
-    resources:
-      - rabbitmqusers
-    verbs:
-      - watch
-      - get
-      - delete
-      - list
-      - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

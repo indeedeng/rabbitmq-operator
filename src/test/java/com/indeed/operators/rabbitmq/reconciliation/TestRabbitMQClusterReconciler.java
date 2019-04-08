@@ -143,7 +143,7 @@ public class TestRabbitMQClusterReconciler {
         when(clusterFactory.fromCustomResource(scaledResource)).thenReturn(
                 new RabbitMQCluster(
                         // Most of these parameters don't matter.
-                        NAME, NAMESPACE, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList()
+                        NAME, NAMESPACE, null, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList()
                 )
         );
 
