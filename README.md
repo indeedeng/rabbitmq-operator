@@ -44,7 +44,8 @@ For more information on Service DNS and routing, see https://kubernetes.io/docs/
 |----------------------|-----------|-------------|
 | `rabbitMQImage`      | string    | Name of RabbitMQ image |
 | `initContainerImage` | string    | Name of initContainer image|
-| `createLoadBalancer` | boolean    | Whether to create a LoadBalancer service |
+| `createLoadBalancer` | boolean   | Whether to create a LoadBalancer service |
+| `preserveOrphanPVCs` | boolean   | When scaling down a cluster, whether to preserve "orphaned" PVCs |
 | `replicas`           | number    | Number of cluster nodes |
 | `compute.cpuRequest` | string    | CPU request per node, ex: "500m" |
 | `compute.memory`     | string    | Memory request per node, ex: "512Mi" |
