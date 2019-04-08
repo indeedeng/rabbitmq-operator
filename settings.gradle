@@ -1,1 +1,1 @@
-rootProject.name = 'rabbitmq-operator'
+include 'rabbitmq-operator-model', 'rabbitmq-operator'
