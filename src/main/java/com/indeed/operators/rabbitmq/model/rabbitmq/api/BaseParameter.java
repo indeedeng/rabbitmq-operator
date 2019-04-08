@@ -69,4 +69,14 @@ public class BaseParameter<T extends AbstractParameterValue> {
     public int hashCode() {
         return Objects.hashCode(value, vhost, component, name);
     }
+
+    @Override
+    public String toString() {
+        return "BaseParameter{" +
+                "value=" + value +
+                ", vhost='" + vhost + '\'' +
+                ", component='" + component + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }
