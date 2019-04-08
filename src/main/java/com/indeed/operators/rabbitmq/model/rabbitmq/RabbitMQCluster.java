@@ -1,7 +1,6 @@
 package com.indeed.operators.rabbitmq.model.rabbitmq;
 
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.ShovelSpec;
-import com.indeed.operators.rabbitmq.model.crd.rabbitmq.UserSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
@@ -14,7 +13,8 @@ public class RabbitMQCluster {
 
     private final String name;
     private final String namespace;
-    private final Secret secret;
+    private final Secret adminSecret;
+    private final Secret erlangCookieSecret;
     private final Service mainService;
     private final Service discoveryService;
     private final Optional<Service> loadBalancerService;
@@ -26,7 +26,8 @@ public class RabbitMQCluster {
     public RabbitMQCluster(
             final String name,
             final String namespace,
-            final Secret secret,
+            final Secret adminSecret,
+            final Secret erlangCookieSecret,
             final Service mainService,
             final Service discoveryService,
             final Optional<Service> loadBalancerService,
@@ -37,7 +38,8 @@ public class RabbitMQCluster {
     ) {
         this.name = name;
         this.namespace = namespace;
-        this.secret = secret;
+        this.adminSecret = adminSecret;
+        this.erlangCookieSecret = erlangCookieSecret;
         this.mainService = mainService;
         this.discoveryService = discoveryService;
         this.loadBalancerService = loadBalancerService;
@@ -55,8 +57,12 @@ public class RabbitMQCluster {
         return namespace;
     }
 
-    public Secret getSecret() {
-        return secret;
+    public Secret getAdminSecret() {
+        return adminSecret;
+    }
+
+    public Secret getErlangCookieSecret() {
+        return erlangCookieSecret;
     }
 
     public Service getMainService() {

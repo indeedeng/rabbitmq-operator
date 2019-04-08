@@ -83,8 +83,10 @@ public class RabbitMQClusterReconciler {
     }
 
     private void reconcileKubernetesObjects(final RabbitMQCluster cluster) throws InterruptedException {
-        final Secret secret = cluster.getSecret();
-        secretsController.createOrUpdate(secret);
+        final Secret adminSecret = cluster.getAdminSecret();
+        final Secret erlangCookieSecret = cluster.getErlangCookieSecret();
+        secretsController.createOrUpdate(adminSecret);
+        secretsController.createOrUpdate(erlangCookieSecret);
 
         servicesController.createOrUpdate(cluster.getMainService());
         servicesController.createOrUpdate(cluster.getDiscoveryService());

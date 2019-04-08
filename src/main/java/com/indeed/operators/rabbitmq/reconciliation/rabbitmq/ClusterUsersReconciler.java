@@ -84,7 +84,7 @@ public class ClusterUsersReconciler {
         final String username = desiredUser.getUsername();
         final Secret userSecret = secretsController.get(RabbitMQSecrets.getUserSecretName(username, desiredUser.getClusterMetadata().getName()), desiredUser.getClusterMetadata().getNamespace());
 
-        createOrUpdateUser(connectionInfo, desiredUser, passwordConverter.convertPasswordToHash(userSecret.getStringData().get(Constants.Secrets.PASSWORD_KEY)));
+        createOrUpdateUser(connectionInfo, desiredUser, passwordConverter.convertPasswordToHash(secretsController.decodeSecretPayload(userSecret.getData().get(Constants.Secrets.PASSWORD_KEY))));
     }
 
     private void createOrUpdateUser(final RabbitMQConnectionInfo connectionInfo, final RabbitMQUser user, final String password) {
