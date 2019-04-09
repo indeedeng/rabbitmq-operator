@@ -16,8 +16,4 @@ dependencies {
     annotationProcessor('io.sundr:builder-annotations:0.14.7')
 }
 
-test {
-    useJUnitPlatform()
-}
-
 ext['indeed.publish.name'] = 'rabbmitq-operator-model'
