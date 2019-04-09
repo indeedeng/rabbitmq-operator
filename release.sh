@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-docker build  -t indeedoss/rabbitmq-operator:latest rabbitmq-operator
+docker build -t indeedoss/rabbitmq-operator:latest rabbitmq-operator
 
 if [ "$TRAVIS_PULL_REQUEST" != "false" ] ; then
     echo "built pull request, nothing left to do"
