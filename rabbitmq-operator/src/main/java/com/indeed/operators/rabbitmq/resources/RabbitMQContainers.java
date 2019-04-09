@@ -23,7 +23,8 @@ public class RabbitMQContainers {
             final double highWatermark
     ) {
         final String discoveryServiceName = RabbitMQServices.getDiscoveryServiceName(rabbitName);
-        final String secretName = RabbitMQSecrets.getClusterSecretName(rabbitName);
+        final String adminSecretName = RabbitMQSecrets.getClusterSecretName(rabbitName);
+        final String erlangCookieSecretName = RabbitMQSecrets.getErlangCookieSecretName(rabbitName);
 
         return new ContainerBuilder()
                 .addNewPort().withName("epmd").withContainerPort(EPMD_PORT).withProtocol("TCP").endPort()
@@ -37,9 +38,9 @@ public class RabbitMQContainers {
                 .endResources()
                 .addNewEnv().withName("MY_POD_NAME").withNewValueFrom().withNewFieldRef().withFieldPath("metadata.name").endFieldRef().endValueFrom().endEnv()
                 .addNewEnv().withName("RABBITMQ_VM_MEMORY_HIGH_WATERMARK").withValue(highWatermark > 0 ? String.valueOf(highWatermark) : "0Mib").endEnv()
-                .addNewEnv().withName("RABBITMQ_ERLANG_COOKIE").withNewValueFrom().withNewSecretKeyRef(Constants.Secrets.ERLANG_COOKIE_KEY, secretName, false).endValueFrom().endEnv()
-                .addNewEnv().withName("RABBITMQ_DEFAULT_USER").withNewValueFrom().withNewSecretKeyRef(Constants.Secrets.USERNAME_KEY, secretName, false).endValueFrom().endEnv()
-                .addNewEnv().withName("RABBITMQ_DEFAULT_PASS").withNewValueFrom().withNewSecretKeyRef(Constants.Secrets.PASSWORD_KEY, secretName, false).endValueFrom().endEnv()
+                .addNewEnv().withName("RABBITMQ_ERLANG_COOKIE").withNewValueFrom().withNewSecretKeyRef(Constants.Secrets.ERLANG_COOKIE_KEY, erlangCookieSecretName, false).endValueFrom().endEnv()
+                .addNewEnv().withName("RABBITMQ_DEFAULT_USER").withNewValueFrom().withNewSecretKeyRef(Constants.Secrets.USERNAME_KEY, adminSecretName, false).endValueFrom().endEnv()
+                .addNewEnv().withName("RABBITMQ_DEFAULT_PASS").withNewValueFrom().withNewSecretKeyRef(Constants.Secrets.PASSWORD_KEY, adminSecretName, false).endValueFrom().endEnv()
                 .addNewEnv().withName("K8S_SERVICE_NAME").withValue(discoveryServiceName).endEnv()
                 .addNewEnv().withName("RABBITMQ_USE_LONGNAME").withValue("true").endEnv()
                 .addNewEnv().withName("RABBITMQ_NODENAME").withValue(String.format("rabbit@$(MY_POD_NAME).%s.%s.svc.cluster.local", discoveryServiceName, namespace)).endEnv()

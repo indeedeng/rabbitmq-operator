@@ -24,6 +24,7 @@ public class RabbitMQCustomResourceSpec {
     private final RabbitMQComputeResources computeResources;
     private final RabbitMQStorageResources storageResources;
     private final ClusterSpec clusterSpec;
+    private final boolean preserveOrphanPVCs;
 
     @JsonCreator
     public RabbitMQCustomResourceSpec(
@@ -33,7 +34,8 @@ public class RabbitMQCustomResourceSpec {
             @JsonProperty("replicas") final int replicas,
             @JsonProperty("compute") final RabbitMQComputeResources computeResources,
             @JsonProperty("storage") final RabbitMQStorageResources storageResources,
-            @JsonProperty("clusterSpec") final ClusterSpec clusterSpec
+            @JsonProperty("clusterSpec") final ClusterSpec clusterSpec,
+            @JsonProperty(value = "preserveOrphanPVCs", defaultValue = "false") final boolean preserveOrphanPVCs
     ) {
         this.rabbitMQImage = rabbitMQImage;
         this.initContainerImage = initContainerImage;
@@ -42,6 +44,7 @@ public class RabbitMQCustomResourceSpec {
         this.computeResources = computeResources;
         this.clusterSpec = clusterSpec;
         this.storageResources = storageResources;
+        this.preserveOrphanPVCs = preserveOrphanPVCs;
     }
 
     public String getRabbitMQImage() {
@@ -72,4 +75,7 @@ public class RabbitMQCustomResourceSpec {
         return clusterSpec;
     }
 
+    public boolean isPreserveOrphanPVCs() {
+        return preserveOrphanPVCs;
+    }
 }

@@ -143,7 +143,7 @@ public class TestRabbitMQClusterReconciler {
         when(clusterFactory.fromCustomResource(scaledResource)).thenReturn(
                 new RabbitMQCluster(
                         // Most of these parameters don't matter.
-                        NAME, NAMESPACE, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList()
+                        NAME, NAMESPACE, null, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList()
                 )
         );
 
@@ -154,6 +154,52 @@ public class TestRabbitMQClusterReconciler {
         reconciler.reconcile(rec);
 
         verify(persistentVolumeClaimController).delete(RABBITMQ_STORAGE_NAME + "-" + NAME + "-3", NAMESPACE);
+        verifyNoMoreInteractions(persistentVolumeClaimController);
+    }
+
+    @Test
+    void scalingDownPreservesOrphanPVCs() throws InterruptedException {
+        final Reconciliation rec = new Reconciliation(NAME, NAME, NAMESPACE, "type");
+
+        final StatefulSet originalStatefulSet = new StatefulSet(
+                "apps/v1",
+                "StatefulSet",
+                new ObjectMetaBuilder().build(),
+                new StatefulSetSpecBuilder().withReplicas(4).build(),
+                null
+        );
+
+        final RabbitMQCustomResource scaledResource = new RabbitMQCustomResourceBuilder()
+                .withMetadata(
+                        new ObjectMetaBuilder()
+                                .withName(NAME)
+                                .withNamespace(NAMESPACE)
+                                .build()
+                )
+                .withSpec(
+                        new RabbitMQCustomResourceSpecBuilder()
+                                .withReplicas(3)
+                                .withPreserveOrphanPVCs(true)
+                                .build()
+                )
+                .build();
+
+        when(controller.get(rec.getResourceName(), rec.getNamespace())).thenReturn(scaledResource);
+
+        when(clusterFactory.fromCustomResource(scaledResource)).thenReturn(
+                new RabbitMQCluster(
+                        // Most of these parameters don't matter.
+                        NAME, NAMESPACE, null, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList()
+                )
+        );
+
+        // This call will happen twice.  In both cases it will occur before the StatefulSet has been patched, hence it
+        // will reflect the origin unscaled replica count.
+        when(statefulSetController.get(NAME, NAMESPACE)).thenReturn(originalStatefulSet);
+
+        reconciler.reconcile(rec);
+
+        verifyZeroInteractions(persistentVolumeClaimController);
         verifyNoMoreInteractions(persistentVolumeClaimController);
     }
 }

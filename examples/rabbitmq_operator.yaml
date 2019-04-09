@@ -29,6 +29,8 @@ spec:
               type: string
             createLoadBalancer:
               type: boolean
+            preserveOrphanPVCs:
+              type: boolean
             replicas:
               type: number
               minimum: 0
@@ -171,16 +173,6 @@ rules:
       - indeed.com
     resources:
       - rabbitmqnetworkpartitions
-    verbs:
-      - watch
-      - get
-      - delete
-      - list
-      - patch
-  - apiGroups:
-      - indeed.com
-    resources:
-      - rabbitmqusers
     verbs:
       - watch
       - get

@@ -51,7 +51,8 @@ public class RabbitMQClusterFactory {
         final String namespace = resource.getMetadata().getNamespace();
         final RabbitMQCustomResourceSpec spec = resource.getSpec();
 
-        final Secret secret = rabbitMQSecrets.createClusterSecret(resource);
+        final Secret adminSecret = rabbitMQSecrets.createClusterSecret(resource);
+        final Secret erlangCookieSecret = rabbitMQSecrets.createErlangCookieSecret(resource);
         final Service mainService = rabbitMQServices.buildService(namespace, resource);
         final Service discoveryService = rabbitMQServices.buildDiscoveryService(namespace, resource);
 
@@ -78,7 +79,8 @@ public class RabbitMQClusterFactory {
         return new RabbitMQCluster(
                 clusterName,
                 namespace,
-                secret,
+                adminSecret,
+                erlangCookieSecret,
                 mainService,
                 discoveryService,
                 loadBalancerService,
