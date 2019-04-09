@@ -1,4 +1,4 @@
-package com.indeed.operators.rabbitmq.model.rabbitmq;
+package com.indeed.operators.rabbitmq.model.crd.rabbitmq;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
