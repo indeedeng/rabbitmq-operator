@@ -2,6 +2,7 @@ package com.indeed.operators.rabbitmq.model.rabbitmq.api;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Objects;
@@ -83,7 +84,7 @@ public class ShovelParameterValue extends AbstractParameterValue {
         return "shovel";
     }
 
-
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Builder {
         private String sourceProtocol = "amqp091";
         private String sourceUri = "amqp://";

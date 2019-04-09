@@ -9,13 +9,13 @@ import java.util.List;
 @JsonPropertyOrder({"addresses", "clusterName"})
 public class DestinationShovelSpec {
 
-    private final List<String> addresses;
+    private final List<AddressAndVhost> addresses;
     private final String secretName;
     private final String secretNamespace;
 
     @JsonCreator
     public DestinationShovelSpec(
-            @JsonProperty("addresses") final List<String> addresses,
+            @JsonProperty("addresses") final List<AddressAndVhost> addresses,
             @JsonProperty("secretName") final String secretName,
             @JsonProperty("secretNamespace") final String secretNamespace
     ) {
@@ -24,7 +24,7 @@ public class DestinationShovelSpec {
         this.secretNamespace = secretNamespace;
     }
 
-    public List<String> getAddresses() {
+    public List<AddressAndVhost> getAddresses() {
         return addresses;
     }
 
