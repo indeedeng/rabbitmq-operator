@@ -118,6 +118,25 @@ public class RabbitMQApiClient {
         httpClient.newCall(req).execute();
     }
 
+    public List<BaseParameter<ShovelParameterValue>> getShovels(final RabbitMQConnectionInfo connectionInfo, final String vhost) throws IOException {
+        final String url = String.format(
+                "%s/parameters/%s/%s",
+                buildRootUrl(connectionInfo),
+                "shovel",
+                encodeString(vhost)
+        );
+
+        final Request req = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildAuthorizationHeader(connectionInfo))
+                .get()
+                .build();
+
+        final Response response = httpClient.newCall(req).execute();
+
+        return mapper.readValue(response.body().byteStream(), new TypeReference<List<BaseParameter<ShovelParameterValue>>>() {});
+    }
+
     public void createOrUpdateShovel(final RabbitMQConnectionInfo connectionInfo, final BaseParameter<ShovelParameterValue> shovel) throws IOException {
         final String url = String.format(
                 "%s/parameters/%s/%s/%s",
@@ -131,6 +150,24 @@ public class RabbitMQApiClient {
                 .url(url)
                 .addHeader("Authorization", buildAuthorizationHeader(connectionInfo))
                 .put(RequestBody.create(MediaType.parse("application/json"), serializePayload(shovel)))
+                .build();
+
+        httpClient.newCall(req).execute();
+    }
+
+    public void deleteShovel(final RabbitMQConnectionInfo connectionInfo, final String vhost, final String shovelName) throws IOException {
+        final String url = String.format(
+                "%s/parameters/%s/%s/%s",
+                buildRootUrl(connectionInfo),
+                "shovel",
+                encodeString(vhost),
+                encodeString(shovelName)
+        );
+
+        final Request req = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildAuthorizationHeader(connectionInfo))
+                .delete()
                 .build();
 
         httpClient.newCall(req).execute();
