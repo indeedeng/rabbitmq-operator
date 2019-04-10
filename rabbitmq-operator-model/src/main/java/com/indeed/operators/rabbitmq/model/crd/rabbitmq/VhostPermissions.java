@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Objects;
-import com.indeed.operators.rabbitmq.model.rabbitmq.VhostOperationPermissions;
 import io.sundr.builder.annotations.Buildable;
 
 @Buildable(
