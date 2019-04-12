@@ -19,6 +19,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -63,7 +64,7 @@ public class ClusterUsersReconciler {
                 try {
                     apiClient.deleteUser(existingUser.getKey());
                 } catch (final Exception e) {
-                    log.error(String.format("Failed to delete user %s in cluster %s in namespace %s", existingUser, cluster.getName(), cluster.getNamespace()), e);
+                    log.error(String.format("Failed to delete user %s", existingUser), e);
                 }
             }
         }
@@ -95,8 +96,8 @@ public class ClusterUsersReconciler {
         try {
             final User user = new User().withName(desiredUser.getUsername()).withPassword(password).withTags(Joiner.on(",").join(desiredUser.getTags()));
             apiClient.createUser(user.getName(), user);
-        } catch (final Exception e) {
-            log.error(String.format("Failed to create/update user %s in cluster %s in namespace %s", desiredUser.getUsername(), desiredUser.getClusterMetadata().getName(), desiredUser.getClusterMetadata().getNamespace()), e);
+        } catch (final IOException e) {
+            log.error(String.format("Failed to create/update user %s", desiredUser.getUsername()), e);
         }
 
         // todo: only update vhosts if we need to
@@ -113,7 +114,7 @@ public class ClusterUsersReconciler {
 
                 apiClient.createPermission(vhost.getVhostName(), user.getUsername(), permissions);
             } catch (final Exception ex) {
-                log.error(String.format("Failed to set vhost permissions for user %s in vhost %s in cluster %s in namespace %s", user.getUsername(), vhost.getVhostName(), user.getClusterMetadata().getName(), user.getClusterMetadata().getNamespace()), ex);
+                log.error(String.format("Failed to set vhost permissions for user %s in vhost %s", user.getUsername(), vhost.getVhostName()), ex);
             }
         }
     }

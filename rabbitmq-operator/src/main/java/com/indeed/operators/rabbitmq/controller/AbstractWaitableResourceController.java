@@ -26,13 +26,13 @@ public abstract class AbstractWaitableResourceController<T extends HasMetadata, 
 
     @Override
     public void waitForReady(final String name, final String namespace, final long time, final TimeUnit timeUnit) throws InterruptedException {
-        log.info("Waiting {} {} for resource of type {} with name {} in namespace {} to be ready", time, timeUnit, getResourceType(), name, namespace);
+        log.info("Waiting {} {} for resource of type {} with name {} to be ready", time, timeUnit, getResourceType(), name);
         operation().inNamespace(namespace).withName(name).waitUntilReady(time, timeUnit);
     }
 
     @Override
     public void waitForDeletion(final String name, final String namespace, final long time, final TimeUnit timeUnit) throws InterruptedException {
-        log.info("Waiting {} {} for resource of type {} with name {} in namespace {} to be deleted", time, timeUnit, getResourceType(), name, namespace);
+        log.info("Waiting {} {} for resource of type {} with name {} to be deleted", time, timeUnit, getResourceType(), name);
         operation().inNamespace(namespace).withName(name).waitUntilCondition(Objects::isNull, time, timeUnit);
     }
 }

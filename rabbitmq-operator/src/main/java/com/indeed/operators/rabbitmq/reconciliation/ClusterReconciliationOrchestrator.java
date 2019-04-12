@@ -21,14 +21,20 @@ public class ClusterReconciliationOrchestrator {
     public void queueReconciliation(final Reconciliation reconciliation, final Consumer<Reconciliation> runner) {
         log.info("Queueing reconciliation {}", reconciliation);
         executor.submit(reconciliation.getClusterName(), reconciliation.getType(), () -> {
-            MDC.put("cluster", reconciliation.getClusterName());
+            MDC.put("clusterName", reconciliation.getClusterName());
+            MDC.put("namespace", reconciliation.getNamespace());
+            MDC.put("resourceName", reconciliation.getResourceName());
+            MDC.put("type", reconciliation.getType());
 
             try {
                 runner.accept(reconciliation);
             } catch (final Throwable t) {
                 log.error("There was an error during reconciliation that the reconciler didn't handle", t);
             } finally {
-                MDC.remove("cluster");
+                MDC.remove("type");
+                MDC.remove("resourceName");
+                MDC.remove("namespace");
+                MDC.remove("clusterName");
             }
         });
 

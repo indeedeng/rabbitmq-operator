@@ -39,7 +39,7 @@ public abstract class AbstractResourceController<T extends HasMetadata, L extend
         final T maybeExistingResource = get(resource.getMetadata().getName(), resource.getMetadata().getNamespace());
 
         if (maybeExistingResource == null) {
-            log.info("Creating resource of type {} with name {} in namespace {}", resourceType, resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+            log.info("Creating resource of type {} with name {}", resourceType, resource.getMetadata().getName());
             return operation().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).create(resource);
         } else {
             return patch(resource);
@@ -53,13 +53,13 @@ public abstract class AbstractResourceController<T extends HasMetadata, L extend
 
     @Override
     public boolean delete(final String name, final String namespace) {
-        log.info("Deleting resource of type {} with name {} in namespace {}", resourceType, name, namespace);
+        log.info("Deleting resource of type {} with name {}", resourceType, name);
         return operation().inNamespace(namespace).withName(name).delete();
     }
 
     @Override
     public T patch(final T resource) {
-        log.info("Patching resource of type {} with name {} in namespace {}", resourceType, resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+        log.info("Patching resource of type {} with name {}", resourceType, resource.getMetadata().getName());
         return operation().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).patch(resource);
     }
 
