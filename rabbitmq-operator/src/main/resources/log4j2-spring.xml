@@ -2,7 +2,7 @@
 <Configuration status="WARN">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %notEmpty{[%notEmpty{resourceName: %X{resourceName}; }%notEmpty{clusterName: %X{clusterName}; }%notEmpty{namespace: %X{namespace}; }%notEmpty{type: %X{type}}] }%m%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %notEmpty{[%notEmpty{namespace: %X{namespace}; }%notEmpty{resourceName: %X{resourceName}; }%notEmpty{clusterName: %X{clusterName}; }%notEmpty{type: %X{type}}] }%m%n"/>
         </Console>
     </Appenders>
     <Loggers>
