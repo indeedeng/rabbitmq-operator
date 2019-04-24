@@ -3,6 +3,7 @@ package com.indeed.operators.rabbitmq.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
+import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.operations.AreQueuesEmptyOperation;
 import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
@@ -55,10 +56,15 @@ public class RabbitConfig {
     }
 
     @Bean
+    public RabbitManagementApiProvider managementApiCache(final SecretsController secretsController) {
+        return new RabbitManagementApiProvider(secretsController);
+    }
+
+    @Bean
     public AreQueuesEmptyOperation queuesEmptyOperation(
-            final RabbitMQApiClient rabbitMQApiClient
+            final RabbitManagementApiProvider managementApiCache
     ) {
-        return new AreQueuesEmptyOperation(rabbitMQApiClient);
+        return new AreQueuesEmptyOperation(managementApiCache);
     }
 
     @Bean

@@ -3,17 +3,13 @@ package com.indeed.operators.rabbitmq.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
-import com.indeed.operators.rabbitmq.model.crd.rabbitmq.VhostOperationPermissions;
+import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
 import com.indeed.operators.rabbitmq.model.rabbitmq.api.BaseParameter;
-import com.indeed.operators.rabbitmq.model.rabbitmq.api.QueueState;
 import com.indeed.operators.rabbitmq.model.rabbitmq.api.ShovelParameterValue;
 import com.indeed.operators.rabbitmq.model.rabbitmq.api.User;
-import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
 import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
 import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -30,9 +26,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 public class RabbitMQApiClient {
     private static final Logger log = LoggerFactory.getLogger(RabbitMQApiClient.class);
@@ -51,19 +45,6 @@ public class RabbitMQApiClient {
         this.secretsController = secretsController;
     }
 
-    public List<QueueState> getQueues(final RabbitMQConnectionInfo connectionInfo) throws IOException {
-        final String url = String.format("%s/queues", buildRootUrl(connectionInfo));
-        final Request req = new Request.Builder()
-                .url(url)
-                .addHeader("Authorization", buildAuthorizationHeader(connectionInfo))
-                .get()
-                .build();
-
-        final Response response = httpClient.newCall(req).execute();
-
-        return mapper.readValue(response.body().byteStream(), new TypeReference<List<QueueState>>() {});
-    }
-
     public List<User> getUsers(final RabbitMQConnectionInfo connectionInfo) throws IOException {
         final String url = String.format("%s/users", buildRootUrl(connectionInfo));
         final Request req = new Request.Builder()
@@ -75,47 +56,6 @@ public class RabbitMQApiClient {
         final Response response = httpClient.newCall(req).execute();
 
         return mapper.readValue(response.body().byteStream(), new TypeReference<List<User>>() {});
-    }
-
-    public void createOrUpdateUser(final RabbitMQConnectionInfo connectionInfo, final String username, final String passwordHash, final Collection<String> tags) throws IOException {
-        final String url = String.format("%s/users/%s", buildRootUrl(connectionInfo), username);
-
-        final Map<String, String> requestBodyContent = ImmutableMap.<String, String>builder()
-                .put("password_hash", passwordHash)
-                .put("tags", Joiner.on(",").join(tags))
-                .build();
-
-        final Request req = new Request.Builder()
-                .url(url)
-                .addHeader("Authorization", buildAuthorizationHeader(connectionInfo))
-                .put(RequestBody.create(MediaType.parse("application/json"), serializePayload(requestBodyContent)))
-                .build();
-
-        httpClient.newCall(req).execute();
-    }
-
-    public void deleteUser(final RabbitMQConnectionInfo connectionInfo, final String username) throws IOException {
-        final String url = String.format("%s/users/%s", buildRootUrl(connectionInfo), username);
-
-        final Request req = new Request.Builder()
-                .url(url)
-                .addHeader("Authorization", buildAuthorizationHeader(connectionInfo))
-                .delete()
-                .build();
-
-        httpClient.newCall(req).execute();
-    }
-
-    public void updateVHostPermissions(final RabbitMQConnectionInfo connectionInfo, final String vhost, final String username, final VhostOperationPermissions permissions) throws IOException {
-        final String url = String.format("%s/permissions/%s/%s", buildRootUrl(connectionInfo), encodeString(vhost), username);
-
-        final Request req = new Request.Builder()
-                .url(url)
-                .addHeader("Authorization", buildAuthorizationHeader(connectionInfo))
-                .put(RequestBody.create(MediaType.parse("application/json"), serializePayload(permissions)))
-                .build();
-
-        httpClient.newCall(req).execute();
     }
 
     public List<BaseParameter<ShovelParameterValue>> getShovels(final RabbitMQConnectionInfo connectionInfo, final String vhost) throws IOException {

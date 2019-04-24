@@ -4,6 +4,7 @@ import com.indeed.operators.rabbitmq.NetworkPartitionWatcher;
 import com.indeed.operators.rabbitmq.RabbitMQEventWatcher;
 import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
+import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.controller.PersistentVolumeClaimController;
 import com.indeed.operators.rabbitmq.controller.PodController;
 import com.indeed.operators.rabbitmq.controller.PodDisruptionBudgetController;
@@ -79,10 +80,10 @@ public class ReconcilerConfig {
     @Bean
     public ClusterUsersReconciler rabbitMQUserReconciler(
             final SecretsController secretsController,
-            final RabbitMQApiClient apiClient,
+            final RabbitManagementApiProvider managementApiProvider,
             final RabbitMQPasswordConverter passwordConverter
     ) {
-        return new ClusterUsersReconciler(secretsController, apiClient, passwordConverter);
+        return new ClusterUsersReconciler(secretsController, managementApiProvider, passwordConverter);
     }
 
     @Bean
