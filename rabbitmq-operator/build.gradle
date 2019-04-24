@@ -40,5 +40,6 @@ test {
 mainClassName = 'com.indeed.operators.rabbitmq.RabbitMQOperator'
 
 task pushLocalImage(type: Exec) {
+    dependsOn 'build'
     commandLine 'bin/push-to-local-registry.sh'
 }

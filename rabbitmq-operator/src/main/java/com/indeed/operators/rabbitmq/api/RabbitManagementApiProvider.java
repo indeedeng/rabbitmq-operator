@@ -35,7 +35,7 @@ public class RabbitManagementApiProvider {
                 return rabbitApis.get(connectionInfo);
             }
 
-            final Secret adminSecret = secretsController.get(RabbitMQSecrets.getUserSecretName(Constants.DEFAULT_USERNAME, connectionInfo.getClusterName()), connectionInfo.getNamespace());
+            final Secret adminSecret = secretsController.get(RabbitMQSecrets.getClusterSecretName(connectionInfo.getClusterName()), connectionInfo.getNamespace());
             final RabbitManagementApi api = RabbitManagementApiFactory.newInstance(
                     buildApiUri(connectionInfo),
                     secretsController.decodeSecretPayload(adminSecret.getData().get(Constants.Secrets.USERNAME_KEY)),
@@ -55,6 +55,6 @@ public class RabbitManagementApiProvider {
             return URI.create(String.format("%s.%s:15672", connectionInfo.getNodeName().get(), serviceName));
         }
 
-        return URI.create(serviceName);
+        return URI.create(String.format("http://%s:15672", serviceName));
     }
 }
