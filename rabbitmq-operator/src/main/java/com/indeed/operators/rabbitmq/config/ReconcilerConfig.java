@@ -2,7 +2,6 @@ package com.indeed.operators.rabbitmq.config;
 
 import com.indeed.operators.rabbitmq.NetworkPartitionWatcher;
 import com.indeed.operators.rabbitmq.RabbitMQEventWatcher;
-import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.controller.PersistentVolumeClaimController;
@@ -71,10 +70,10 @@ public class ReconcilerConfig {
 
     @Bean
     public ShovelReconciler shovelReconciler(
-            final RabbitMQApiClient apiClient,
+            final RabbitManagementApiProvider apiProvider,
             final SecretsController secretsController
     ) {
-        return new ShovelReconciler(apiClient, secretsController);
+        return new ShovelReconciler(apiProvider, secretsController);
     }
 
     @Bean

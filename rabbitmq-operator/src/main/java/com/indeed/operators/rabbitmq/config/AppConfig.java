@@ -1,26 +1,7 @@
 package com.indeed.operators.rabbitmq.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.indeed.operators.rabbitmq.NetworkPartitionWatcher;
-import com.indeed.operators.rabbitmq.RabbitMQEventWatcher;
-import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
-import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
-import com.indeed.operators.rabbitmq.controller.PersistentVolumeClaimController;
-import com.indeed.operators.rabbitmq.controller.PodController;
-import com.indeed.operators.rabbitmq.controller.PodDisruptionBudgetController;
-import com.indeed.operators.rabbitmq.controller.SecretsController;
-import com.indeed.operators.rabbitmq.controller.ServicesController;
-import com.indeed.operators.rabbitmq.controller.StatefulSetController;
-import com.indeed.operators.rabbitmq.controller.crd.NetworkPartitionResourceController;
-import com.indeed.operators.rabbitmq.controller.crd.RabbitMQResourceController;
 import com.indeed.operators.rabbitmq.executor.ClusterAwareExecutor;
-import com.indeed.operators.rabbitmq.operations.AreQueuesEmptyOperation;
-import com.indeed.operators.rabbitmq.reconciliation.ClusterReconciliationOrchestrator;
-import com.indeed.operators.rabbitmq.reconciliation.NetworkPartitionReconciler;
-import com.indeed.operators.rabbitmq.reconciliation.RabbitMQClusterReconciler;
-import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.lock.NamedSemaphores;
-import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
 import com.indeed.operators.rabbitmq.resources.RabbitMQPods;
@@ -34,16 +15,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
-
-import static com.indeed.operators.rabbitmq.Constants.DEFAULT_USERNAME;
 
 @Configuration
 public class AppConfig {

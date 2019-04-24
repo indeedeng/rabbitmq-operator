@@ -1,7 +1,5 @@
 package com.indeed.operators.rabbitmq.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.indeed.operators.rabbitmq.api.RabbitMQApiClient;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
@@ -10,7 +8,6 @@ import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
 import com.indeed.operators.rabbitmq.resources.RabbitMQPods;
 import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
 import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
-import okhttp3.OkHttpClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -45,14 +42,6 @@ public class RabbitConfig {
     @Bean
     public RabbitMQServices rabbitMQServices() {
         return new RabbitMQServices();
-    }
-
-    @Bean
-    public RabbitMQApiClient rabbitMQApiClient(
-            final OkHttpClient okHttpClient,
-            final SecretsController secretsController
-    ) {
-        return new RabbitMQApiClient(okHttpClient, new ObjectMapper(), secretsController);
     }
 
     @Bean
