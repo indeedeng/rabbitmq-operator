@@ -14,23 +14,26 @@ import java.util.List;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         editableEnabled = false
 )
-@JsonPropertyOrder({"highWatermarkFraction", "users", "shovels"})
+@JsonPropertyOrder({"highWatermarkFraction", "users", "shovels", "policies"})
 @JsonDeserialize(using = JsonDeserializer.None.class)
 public class ClusterSpec {
 
     private final double highWatermarkFraction;
     private final List<UserSpec> users;
     private final List<ShovelSpec> shovels;
+    private final List<PolicySpec> policies;
 
     @JsonCreator
     public ClusterSpec(
             @JsonProperty("highWatermarkFraction") final double highWatermarkFraction,
             @JsonProperty("users") final List<UserSpec> users,
-            @JsonProperty("shovels") final List<ShovelSpec> shovels
+            @JsonProperty("shovels") final List<ShovelSpec> shovels,
+            @JsonProperty("policies") final List<PolicySpec> policies
     ) {
         this.highWatermarkFraction = highWatermarkFraction;
         this.users = (users == null ? Lists.newArrayList() : users);
         this.shovels = (shovels == null ? Lists.newArrayList() : shovels);
+        this.policies = (policies == null ? Lists.newArrayList() : policies);
     }
 
     public double getHighWatermarkFraction() {
@@ -43,5 +46,9 @@ public class ClusterSpec {
 
     public List<ShovelSpec> getShovels() {
         return shovels;
+    }
+
+    public List<PolicySpec> getPolicies() {
+        return policies;
     }
 }

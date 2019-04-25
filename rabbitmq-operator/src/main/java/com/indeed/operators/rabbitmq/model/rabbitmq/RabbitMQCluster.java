@@ -1,5 +1,6 @@
 package com.indeed.operators.rabbitmq.model.rabbitmq;
 
+import com.indeed.operators.rabbitmq.model.crd.rabbitmq.PolicySpec;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.ShovelSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
@@ -22,6 +23,7 @@ public class RabbitMQCluster {
     private final PodDisruptionBudget podDisruptionBudget;
     private final List<ShovelSpec> shovels;
     private final List<RabbitMQUser> users;
+    private final List<PolicySpec> policies;
 
     public RabbitMQCluster(
             final String name,
@@ -34,7 +36,8 @@ public class RabbitMQCluster {
             final StatefulSet statefulSet,
             final PodDisruptionBudget podDisruptionBudget,
             final List<ShovelSpec> shovels,
-            final List<RabbitMQUser> users
+            final List<RabbitMQUser> users,
+            final List<PolicySpec> policies
     ) {
         this.name = name;
         this.namespace = namespace;
@@ -47,6 +50,7 @@ public class RabbitMQCluster {
         this.podDisruptionBudget = podDisruptionBudget;
         this.shovels = shovels;
         this.users = users;
+        this.policies = policies;
     }
 
     public String getName() {
@@ -91,5 +95,9 @@ public class RabbitMQCluster {
 
     public List<RabbitMQUser> getUsers() {
         return users;
+    }
+
+    public List<PolicySpec> getPolicies() {
+        return policies;
     }
 }

@@ -13,23 +13,24 @@ repositories {
 dependencies {
     compile project(':rabbitmq-operator-model')
 
-    compile('io.fabric8:kubernetes-client:4.1.3')
-    compile('com.google.guava:guava:27.0.1-jre')
-    compile('org.slf4j:slf4j-api')
-    compile('org.apache.commons:commons-collections4:4.2')
-    compile('org.apache.commons:commons-text:1.6')
-    compile('com.fasterxml.jackson.core:jackson-core:2.9.7')
-    compile('com.fasterxml.jackson.core:jackson-databind:2.9.7')
+    compile 'com.indeed:rabbitmq-admin:0.0.1'
+    compile 'io.fabric8:kubernetes-client:4.1.3'
+    compile 'com.google.guava:guava:27.0.1-jre'
+    compile 'org.slf4j:slf4j-api'
+    compile 'org.apache.commons:commons-collections4:4.2'
+    compile 'org.apache.commons:commons-text:1.6'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.9.7'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.7'
     compile('org.springframework.boot:spring-boot-starter:2.1.1.RELEASE') {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
     }
-    compile('org.springframework.boot:spring-boot-starter-log4j2:2.1.1.RELEASE')
+    compile 'org.springframework.boot:spring-boot-starter-log4j2:2.1.1.RELEASE'
 
-    testCompile('org.mockito:mockito-core:2.24.0')
-    testCompile('org.mockito:mockito-junit-jupiter:2.24.0')
-    testCompile('org.junit.jupiter:junit-jupiter-api:5.4.0')
+    testCompile 'org.mockito:mockito-core:2.24.0'
+    testCompile 'org.mockito:mockito-junit-jupiter:2.24.0'
+    testCompile 'org.junit.jupiter:junit-jupiter-api:5.4.0'
 
-    testRuntime('org.junit.jupiter:junit-jupiter-engine:5.4.0')
+    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
 }
 
 test {
@@ -39,5 +40,6 @@ test {
 mainClassName = 'com.indeed.operators.rabbitmq.RabbitMQOperator'
 
 task pushLocalImage(type: Exec) {
+    dependsOn 'build'
     commandLine 'bin/push-to-local-registry.sh'
 }

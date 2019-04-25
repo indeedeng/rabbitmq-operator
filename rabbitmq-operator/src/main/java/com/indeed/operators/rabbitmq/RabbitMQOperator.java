@@ -12,12 +12,13 @@ import org.springframework.boot.Banner;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = GsonAutoConfiguration.class)
 public class RabbitMQOperator implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(RabbitMQOperator.class);
 
