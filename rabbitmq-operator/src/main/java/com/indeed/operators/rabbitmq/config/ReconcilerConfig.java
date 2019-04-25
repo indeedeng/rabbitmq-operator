@@ -18,6 +18,7 @@ import com.indeed.operators.rabbitmq.reconciliation.ClusterReconciliationOrchest
 import com.indeed.operators.rabbitmq.reconciliation.NetworkPartitionReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.RabbitMQClusterReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.PolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
 import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
@@ -63,9 +64,21 @@ public class ReconcilerConfig {
             final PodDisruptionBudgetController podDisruptionBudgetController,
             final PersistentVolumeClaimController persistentVolumeClaimController,
             final ShovelReconciler shovelReconciler,
-            final ClusterUsersReconciler usersReconciler
+            final ClusterUsersReconciler usersReconciler,
+            final PolicyReconciler policyReconciler
     ) {
-        return new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, shovelReconciler, usersReconciler);
+        return new RabbitMQClusterReconciler(
+                clusterFactory,
+                controller,
+                secretsController,
+                servicesController,
+                statefulSetController,
+                podDisruptionBudgetController,
+                persistentVolumeClaimController,
+                shovelReconciler,
+                usersReconciler,
+                policyReconciler
+        );
     }
 
     @Bean
@@ -97,5 +110,12 @@ public class ReconcilerConfig {
             final String namespace
     ) {
         return new NetworkPartitionReconciler(rabbitMQResourceController, networkPartitionResourceController, queuesEmptyOperation, rabbitMQPods, rabbitMQContainers, statefulSetController, podController, namespace);
+    }
+
+    @Bean
+    public PolicyReconciler policyReconciler(
+            final RabbitManagementApiProvider apiProvider
+    ) {
+        return new PolicyReconciler(apiProvider);
     }
 }
