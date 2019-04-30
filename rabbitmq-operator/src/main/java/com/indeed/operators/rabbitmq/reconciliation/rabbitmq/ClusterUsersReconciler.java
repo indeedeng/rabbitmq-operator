@@ -96,7 +96,7 @@ public class ClusterUsersReconciler {
         try {
             final User user = new User().withName(desiredUser.getUsername()).withPassword(password).withTags(Joiner.on(",").join(desiredUser.getTags()));
             apiClient.createUser(user.getName(), user);
-        } catch (final IOException e) {
+        } catch (final Exception e) {
             log.error(String.format("Failed to create/update user %s", desiredUser.getUsername()), e);
         }
 
