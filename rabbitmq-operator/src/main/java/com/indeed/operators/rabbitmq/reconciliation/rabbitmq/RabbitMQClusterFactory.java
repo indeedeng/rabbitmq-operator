@@ -88,7 +88,8 @@ public class RabbitMQClusterFactory {
                 podDisruptionBudget,
                 resource.getSpec().getClusterSpec().getShovels(),
                 users,
-                spec.getClusterSpec().getPolicies()
+                spec.getClusterSpec().getPolicies(),
+                spec.getClusterSpec().getOperatorPolicies()
         );
     }
 

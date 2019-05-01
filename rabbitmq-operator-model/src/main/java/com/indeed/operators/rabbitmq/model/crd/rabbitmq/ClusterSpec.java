@@ -22,18 +22,21 @@ public class ClusterSpec {
     private final List<UserSpec> users;
     private final List<ShovelSpec> shovels;
     private final List<PolicySpec> policies;
+    private final List<OperatorPolicySpec> operatorPolicies;
 
     @JsonCreator
     public ClusterSpec(
             @JsonProperty("highWatermarkFraction") final double highWatermarkFraction,
             @JsonProperty("users") final List<UserSpec> users,
             @JsonProperty("shovels") final List<ShovelSpec> shovels,
-            @JsonProperty("policies") final List<PolicySpec> policies
+            @JsonProperty("policies") final List<PolicySpec> policies,
+            @JsonProperty("operatorPolicies") final List<OperatorPolicySpec> operatorPolicies
     ) {
         this.highWatermarkFraction = highWatermarkFraction;
         this.users = (users == null ? Lists.newArrayList() : users);
         this.shovels = (shovels == null ? Lists.newArrayList() : shovels);
         this.policies = (policies == null ? Lists.newArrayList() : policies);
+        this.operatorPolicies = (operatorPolicies == null ? Lists.newArrayList() : operatorPolicies);
     }
 
     public double getHighWatermarkFraction() {
@@ -50,5 +53,9 @@ public class ClusterSpec {
 
     public List<PolicySpec> getPolicies() {
         return policies;
+    }
+
+    public List<OperatorPolicySpec> getOperatorPolicies() {
+        return operatorPolicies;
     }
 }

@@ -18,6 +18,7 @@ import com.indeed.operators.rabbitmq.reconciliation.ClusterReconciliationOrchest
 import com.indeed.operators.rabbitmq.reconciliation.NetworkPartitionReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.RabbitMQClusterReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.OperatorPolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.PolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
@@ -65,7 +66,8 @@ public class ReconcilerConfig {
             final PersistentVolumeClaimController persistentVolumeClaimController,
             final ShovelReconciler shovelReconciler,
             final ClusterUsersReconciler usersReconciler,
-            final PolicyReconciler policyReconciler
+            final PolicyReconciler policyReconciler,
+            final OperatorPolicyReconciler operatorPolicyReconciler
     ) {
         return new RabbitMQClusterReconciler(
                 clusterFactory,
@@ -77,7 +79,8 @@ public class ReconcilerConfig {
                 persistentVolumeClaimController,
                 shovelReconciler,
                 usersReconciler,
-                policyReconciler
+                policyReconciler,
+                operatorPolicyReconciler
         );
     }
 
@@ -117,5 +120,12 @@ public class ReconcilerConfig {
             final RabbitManagementApiProvider apiProvider
     ) {
         return new PolicyReconciler(apiProvider);
+    }
+
+    @Bean
+    public OperatorPolicyReconciler operatorPolicyReconciler(
+            final RabbitManagementApiProvider apiProvider
+    ) {
+        return new OperatorPolicyReconciler(apiProvider);
     }
 }
