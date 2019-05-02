@@ -10,6 +10,7 @@ import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.OperatorPolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.PolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
@@ -37,6 +38,7 @@ public class RabbitMQClusterReconciler {
     private final ShovelReconciler shovelReconciler;
     private final ClusterUsersReconciler usersReconciler;
     private final PolicyReconciler policyReconciler;
+    private final OperatorPolicyReconciler operatorPolicyReconciler;
 
     public RabbitMQClusterReconciler(
             final RabbitMQClusterFactory clusterFactory,
@@ -48,7 +50,8 @@ public class RabbitMQClusterReconciler {
             final PersistentVolumeClaimController persistentVolumeClaimController,
             final ShovelReconciler shovelReconciler,
             final ClusterUsersReconciler usersReconciler,
-            final PolicyReconciler policyReconciler
+            final PolicyReconciler policyReconciler,
+            final OperatorPolicyReconciler operatorPolicyReconciler
     ) {
         this.clusterFactory = clusterFactory;
         this.controller = controller;
@@ -60,6 +63,7 @@ public class RabbitMQClusterReconciler {
         this.shovelReconciler = shovelReconciler;
         this.usersReconciler = usersReconciler;
         this.policyReconciler = policyReconciler;
+        this.operatorPolicyReconciler = operatorPolicyReconciler;
     }
 
     public void reconcile(final Reconciliation reconciliation) throws InterruptedException {
@@ -82,6 +86,7 @@ public class RabbitMQClusterReconciler {
             shovelReconciler.reconcile(cluster);
             usersReconciler.reconcile(cluster);
             policyReconciler.reconcile(cluster);
+            operatorPolicyReconciler.reconcile(cluster);
 
             log.info("Reconciliation complete!");
         } else {

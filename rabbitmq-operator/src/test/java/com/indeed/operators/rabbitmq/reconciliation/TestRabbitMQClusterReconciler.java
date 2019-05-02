@@ -14,6 +14,7 @@ import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceBu
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceSpecBuilder;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.OperatorPolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.PolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ShovelReconciler;
@@ -71,11 +72,14 @@ public class TestRabbitMQClusterReconciler {
     @Mock
     private PolicyReconciler policyReconciler;
 
+    @Mock
+    private OperatorPolicyReconciler operatorPolicyReconciler;
+
     private RabbitMQClusterReconciler reconciler;
 
     @BeforeEach
     void setup() {
-        reconciler = new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, shovelReconciler, usersReconciler, policyReconciler);
+        reconciler = new RabbitMQClusterReconciler(clusterFactory, controller, secretsController, servicesController, statefulSetController, podDisruptionBudgetController, persistentVolumeClaimController, shovelReconciler, usersReconciler, policyReconciler, operatorPolicyReconciler);
     }
 
     @Test
@@ -147,7 +151,7 @@ public class TestRabbitMQClusterReconciler {
         when(clusterFactory.fromCustomResource(scaledResource)).thenReturn(
                 new RabbitMQCluster(
                         // Most of these parameters don't matter.
-                        NAME, NAMESPACE, null, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList()
+                        NAME, NAMESPACE, null, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList()
                 )
         );
 
@@ -193,7 +197,7 @@ public class TestRabbitMQClusterReconciler {
         when(clusterFactory.fromCustomResource(scaledResource)).thenReturn(
                 new RabbitMQCluster(
                         // Most of these parameters don't matter.
-                        NAME, NAMESPACE, null, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList()
+                        NAME, NAMESPACE, null, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList()
                 )
         );
 
