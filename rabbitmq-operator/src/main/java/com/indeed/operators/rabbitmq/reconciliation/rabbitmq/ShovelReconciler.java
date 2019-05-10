@@ -59,21 +59,18 @@ public class ShovelReconciler {
             try {
                 apiClient.createShovel(shovel.getVhost(), shovel.getName(), shovel);
             } catch (final Exception e) {
-                log.error(String.format("Failed to create shovel with name %s", shovel.getName()), e);
+                log.error(String.format("Failed to create shovel with name %s in vhost %s", shovel.getName(), shovel.getVhost()), e);
             }
         }
     }
 
     private void deleteObsoleteShovels(final RabbitMQCluster cluster, final RabbitManagementApi apiClient) {
-        final String clusterName = cluster.getName();
-        final String clusterNamespace = cluster.getNamespace();
-
         final List<Shovel> existingShovels;
 
         try {
             existingShovels = apiClient.listShovels();
         } catch (final Exception e) {
-            throw new RuntimeException(String.format("Unable to retrieve existing shovels for cluster %s in namespace %s, skipping reconciliation of shovels", clusterName, clusterNamespace), e);
+            throw new RuntimeException("Unable to retrieve existing shovels, skipping reconciliation of shovels", e);
         }
 
         final Map<String, Shovel> existingShovelMap = existingShovels.stream()
@@ -87,7 +84,7 @@ public class ShovelReconciler {
                 try {
                     apiClient.deleteShovel(existingShovel.getValue().getVhost(), shovelName);
                 } catch (final Exception e) {
-                    log.error(String.format("Failed to delete shovel with name %s with %s vhost", shovelName, existingShovel.getValue().getVhost()), e);
+                    log.error(String.format("Failed to delete shovel with name %s in vhost %s", shovelName, existingShovel.getValue().getVhost()), e);
                 }
             }
         }

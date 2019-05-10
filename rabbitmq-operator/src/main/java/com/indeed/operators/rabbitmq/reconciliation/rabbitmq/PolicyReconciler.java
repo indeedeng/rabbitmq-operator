@@ -45,21 +45,18 @@ public class PolicyReconciler {
             try {
                 apiClient.createPolicy(policy.getVhost(), policy.getName(), policy);
             } catch (final Exception e) {
-                log.error(String.format("Failed to create policy with name %s for cluster %s in namespace %s", policy.getName(), cluster.getName(), cluster.getNamespace()), e);
+                log.error(String.format("Failed to create policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
             }
         }
     }
 
     private void deleteObsoletePolicies(final RabbitMQCluster cluster, final RabbitManagementApi apiClient) {
-        final String clusterName = cluster.getName();
-        final String clusterNamespace = cluster.getNamespace();
-
         final List<Policy> existingPolicies;
 
         try {
             existingPolicies = apiClient.listPolicies();
         } catch (final Exception e) {
-            throw new RuntimeException(String.format("Unable to retrieve existing policies for cluster %s in namespace %s, skipping reconciliation of policies", clusterName, clusterNamespace), e);
+            throw new RuntimeException("Unable to retrieve existing policies, skipping reconciliation of policies", e);
         }
 
         final Map<String, Policy> existingPolicyMap = existingPolicies.stream()
@@ -73,7 +70,7 @@ public class PolicyReconciler {
                 try {
                     apiClient.deletePolicy(existingPolicy.getValue().getVhost(), policyName);
                 } catch (final Exception e) {
-                    log.error(String.format("Failed to delete policy with name %s with %s vhost in cluster %s in namespace %s", policyName, existingPolicy.getValue().getVhost(), clusterName, clusterNamespace), e);
+                    log.error(String.format("Failed to delete policy with name %s in vhost %s", policyName, existingPolicy.getValue().getVhost()), e);
                 }
             }
         }
