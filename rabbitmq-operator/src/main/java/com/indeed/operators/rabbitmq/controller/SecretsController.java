@@ -39,10 +39,10 @@ public class SecretsController extends AbstractResourceController<Secret, Secret
         final Secret maybeExistingResource = get(resource.getMetadata().getName(), resource.getMetadata().getNamespace());
 
         if (maybeExistingResource == null) {
-            log.info("Creating resource of type {} with name {} in namespace {}", getResourceType(), resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+            log.info("Creating resource of type {} with name {}", getResourceType(), resource.getMetadata().getName());
             return operation().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).create(resource);
         } else {
-            log.info("Patching metadata for resource type Secret with name {} in namespace {} - leaving Secret payload alone", resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+            log.info("Patching metadata for resource type Secret with name {} - leaving Secret payload alone", resource.getMetadata().getName());
             final Secret patchedSecret = new SecretBuilder(resource)
                     .withStringData(maybeExistingResource.getStringData())
                     .withData(maybeExistingResource.getData())

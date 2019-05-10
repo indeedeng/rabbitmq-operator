@@ -45,21 +45,18 @@ public class OperatorPolicyReconciler {
             try {
                 apiClient.createOperatorPolicy(policy.getVhost(), policy.getName(), policy);
             } catch (final Exception e) {
-                log.error(String.format("Failed to create operator policy with name %s for cluster %s in namespace %s", policy.getName(), cluster.getName(), cluster.getNamespace()), e);
+                log.error(String.format("Failed to create operator policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
             }
         }
     }
 
     private void deleteObsoleteOperatorPolicies(final RabbitMQCluster cluster, final RabbitManagementApi apiClient) {
-        final String clusterName = cluster.getName();
-        final String clusterNamespace = cluster.getNamespace();
-
         final List<OperatorPolicy> existingPolicies;
 
         try {
             existingPolicies = apiClient.listOperatorPolicies();
         } catch (final Exception e) {
-            throw new RuntimeException(String.format("Unable to retrieve existing operator policies for cluster %s in namespace %s, skipping reconciliation of operator policies", clusterName, clusterNamespace), e);
+            throw new RuntimeException("Unable to retrieve existing operator policies, skipping reconciliation of operator policies", e);
         }
 
         final Map<String, OperatorPolicy> existingPolicyMap = existingPolicies.stream()
@@ -73,7 +70,7 @@ public class OperatorPolicyReconciler {
                 try {
                     apiClient.deleteOperatorPolicy(existingPolicy.getValue().getVhost(), policyName);
                 } catch (final Exception e) {
-                    log.error(String.format("Failed to delete operator policy with name %s with %s vhost in cluster %s in namespace %s", policyName, existingPolicy.getValue().getVhost(), clusterName, clusterNamespace), e);
+                    log.error(String.format("Failed to delete operator policy with name %s in vhost %s", policyName, existingPolicy.getValue().getVhost()), e);
                 }
             }
         }

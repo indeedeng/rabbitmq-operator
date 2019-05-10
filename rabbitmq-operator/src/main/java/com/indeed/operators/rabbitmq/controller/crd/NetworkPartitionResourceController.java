@@ -27,8 +27,8 @@ public class NetworkPartitionResourceController extends AbstractResourceControll
     }
 
     @Override
-    public boolean delete(String name, String namespace) {
-        log.info("Deleting resource of type {} with name {} in namespace {}", getResourceType(), name, namespace);
+    public boolean delete(final String name, final String namespace) {
+        log.info("Deleting resource");
         operation().inNamespace(namespace).withName(name).cascading(true).delete();
 
         return true;

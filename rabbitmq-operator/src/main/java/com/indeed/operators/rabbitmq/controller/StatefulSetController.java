@@ -35,17 +35,17 @@ public class StatefulSetController extends AbstractWaitableResourceController<St
 
     @Override
     public StatefulSet patch(final StatefulSet resource) {
-        log.info("Patching resource of type {} with name {} in namespace {}", getResourceType(), resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+        log.info("Patching resource of type {} with name {}", getResourceType(), resource.getMetadata().getName());
         return operation().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(false).patch(resource);
     }
 
     @Override
     public void waitForReady(final String name, final String namespace, final long time, final TimeUnit timeUnit) throws InterruptedException {
-        log.info("Waiting {} {} for StatefulSet with name {} in namespace {} to be ready", time, timeUnit, name, namespace);
+        log.info("Waiting {} {} for StatefulSet with name {} to be ready", time, timeUnit, name);
         operation().inNamespace(namespace).withName(name).waitUntilReady(time, timeUnit);
         operation().inNamespace(namespace).withName(name).waitUntilCondition(ss -> ss.getSpec().getReplicas().equals(ss.getStatus().getCurrentReplicas()), time, timeUnit);
 
-        log.info("StatefulSet with name {} in namespace {} reported as ready - checking pod statuses", name, namespace);
+        log.info("StatefulSet with name {} reported as ready - checking pod statuses", name);
 
         final StatefulSet statefulSet = operation().inNamespace(namespace).withName(name).get();
 
