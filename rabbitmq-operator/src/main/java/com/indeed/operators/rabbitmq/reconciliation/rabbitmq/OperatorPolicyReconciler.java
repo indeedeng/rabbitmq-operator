@@ -1,5 +1,6 @@
 package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
+import com.indeed.operators.rabbitmq.api.RabbitApiResponseConsumer;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.OperatorPolicySpec;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
@@ -43,7 +44,7 @@ public class OperatorPolicyReconciler {
                     .withPriority(desiredPolicy.getPriority());
 
             try {
-                apiClient.createOperatorPolicy(policy.getVhost(), policy.getName(), policy);
+                RabbitApiResponseConsumer.consumeResponse(apiClient.createOperatorPolicy(policy.getVhost(), policy.getName(), policy).execute());
             } catch (final Exception e) {
                 log.error(String.format("Failed to create operator policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
             }
@@ -54,7 +55,7 @@ public class OperatorPolicyReconciler {
         final List<OperatorPolicy> existingPolicies;
 
         try {
-            existingPolicies = apiClient.listOperatorPolicies();
+            existingPolicies = RabbitApiResponseConsumer.consumeResponse(apiClient.listOperatorPolicies().execute());
         } catch (final Exception e) {
             throw new RuntimeException("Unable to retrieve existing operator policies, skipping reconciliation of operator policies", e);
         }
@@ -68,7 +69,7 @@ public class OperatorPolicyReconciler {
             final String policyName = existingPolicy.getKey();
             if (!desiredPolicyMap.containsKey(policyName)) {
                 try {
-                    apiClient.deleteOperatorPolicy(existingPolicy.getValue().getVhost(), policyName);
+                    RabbitApiResponseConsumer.consumeResponse(apiClient.deleteOperatorPolicy(existingPolicy.getValue().getVhost(), policyName).execute());
                 } catch (final Exception e) {
                     log.error(String.format("Failed to delete operator policy with name %s in vhost %s", policyName, existingPolicy.getValue().getVhost()), e);
                 }

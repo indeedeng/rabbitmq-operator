@@ -13,7 +13,7 @@ import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceBuilder;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceSpecBuilder;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
-import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.UserReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.OperatorPolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.PolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
@@ -67,7 +67,7 @@ public class TestRabbitMQClusterReconciler {
     private ShovelReconciler shovelReconciler;
 
     @Mock
-    private ClusterUsersReconciler usersReconciler;
+    private UserReconciler usersReconciler;
 
     @Mock
     private PolicyReconciler policyReconciler;

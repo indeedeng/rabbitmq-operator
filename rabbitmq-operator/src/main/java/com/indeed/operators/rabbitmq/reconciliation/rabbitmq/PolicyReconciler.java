@@ -1,5 +1,6 @@
 package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
+import com.indeed.operators.rabbitmq.api.RabbitApiResponseConsumer;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.PolicySpec;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
@@ -43,7 +44,7 @@ public class PolicyReconciler {
                     .withPriority(desiredPolicy.getPriority());
 
             try {
-                apiClient.createPolicy(policy.getVhost(), policy.getName(), policy);
+                RabbitApiResponseConsumer.consumeResponse(apiClient.createPolicy(policy.getVhost(), policy.getName(), policy).execute());
             } catch (final Exception e) {
                 log.error(String.format("Failed to create policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
             }
@@ -54,7 +55,7 @@ public class PolicyReconciler {
         final List<Policy> existingPolicies;
 
         try {
-            existingPolicies = apiClient.listPolicies();
+            existingPolicies = RabbitApiResponseConsumer.consumeResponse(apiClient.listPolicies().execute());
         } catch (final Exception e) {
             throw new RuntimeException("Unable to retrieve existing policies, skipping reconciliation of policies", e);
         }
@@ -68,7 +69,7 @@ public class PolicyReconciler {
             final String policyName = existingPolicy.getKey();
             if (!desiredPolicyMap.containsKey(policyName)) {
                 try {
-                    apiClient.deletePolicy(existingPolicy.getValue().getVhost(), policyName);
+                    RabbitApiResponseConsumer.consumeResponse(apiClient.deletePolicy(existingPolicy.getValue().getVhost(), policyName).execute());
                 } catch (final Exception e) {
                     log.error(String.format("Failed to delete policy with name %s in vhost %s", policyName, existingPolicy.getValue().getVhost()), e);
                 }
