@@ -8,6 +8,7 @@ import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
 import com.indeed.rabbitmq.admin.RabbitManagementApi;
 import com.indeed.rabbitmq.admin.RabbitManagementApiFactory;
 import io.fabric8.kubernetes.api.model.Secret;
+import okhttp3.OkHttpClient;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -36,7 +37,9 @@ public class RabbitManagementApiProvider {
             }
 
             final Secret adminSecret = secretsController.get(RabbitMQSecrets.getClusterSecretName(connectionInfo.getClusterName()), connectionInfo.getNamespace());
+            final OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder().addInterceptor(new RabbitManagementApiLogger());
             final RabbitManagementApi api = RabbitManagementApiFactory.newInstance(
+                    okHttpClientBuilder,
                     buildApiUri(connectionInfo),
                     secretsController.decodeSecretPayload(adminSecret.getData().get(Constants.Secrets.USERNAME_KEY)),
                     secretsController.decodeSecretPayload(adminSecret.getData().get(Constants.Secrets.PASSWORD_KEY))
