@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.indeed.operators.rabbitmq.Constants.Uris.AMQP_BASE;
+
 public class ShovelReconciler {
     private static final Logger log = LoggerFactory.getLogger(ShovelReconciler.class);
 
@@ -52,11 +54,11 @@ public class ShovelReconciler {
             final String password = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.PASSWORD_KEY));
 
             final List<String> uris = desiredShovel.getDestination().getAddresses().stream()
-                    .map(addr -> String.format("amqp://%s:%s@%s", username, password, addr.asRabbitUri()))
+                    .map(addr -> String.format("%s%s:%s@%s", AMQP_BASE, username, password, addr.asRabbitUri()))
                     .collect(Collectors.toList());
 
             final ShovelArguments shovelArguments = new ShovelArguments()
-                    .withSrcUri(Lists.newArrayList("amqp://"))
+                    .withSrcUri(Lists.newArrayList(AMQP_BASE))
                     .withSrcQueue(desiredShovel.getSource().getQueue())
                     .withDestUri(uris);
             final Shovel shovel = new Shovel().withValue(shovelArguments).withVhost(desiredShovel.getSource().getVhost()).withName(desiredShovel.getName());

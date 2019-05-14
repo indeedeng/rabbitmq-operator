@@ -24,4 +24,8 @@ public class Constants {
         public static final String PASSWORD_KEY = "password";
         public static final String ERLANG_COOKIE_KEY = "erlang-cookie";
     }
+
+    public static class Uris {
+        public static final String AMQP_BASE = "amqp://";
+    }
 }
