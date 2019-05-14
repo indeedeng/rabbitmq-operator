@@ -2,6 +2,7 @@ package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
 import com.google.common.base.Preconditions;
 import com.indeed.operators.rabbitmq.Constants;
+import com.indeed.operators.rabbitmq.api.RabbitApiResponseConsumer;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.ShovelSpec;
@@ -57,7 +58,7 @@ public class ShovelReconciler {
             final Shovel shovel = new Shovel().withValue(shovelArguments).withVhost(desiredShovel.getSource().getVhost()).withName(desiredShovel.getName());
 
             try {
-                apiClient.createShovel(shovel.getVhost(), shovel.getName(), shovel);
+                RabbitApiResponseConsumer.consumeResponse(apiClient.createShovel(shovel.getVhost(), shovel.getName(), shovel).execute());
             } catch (final Exception e) {
                 log.error(String.format("Failed to create shovel with name %s in vhost %s", shovel.getName(), shovel.getVhost()), e);
             }
@@ -68,7 +69,7 @@ public class ShovelReconciler {
         final List<Shovel> existingShovels;
 
         try {
-            existingShovels = apiClient.listShovels();
+            existingShovels = RabbitApiResponseConsumer.consumeResponse(apiClient.listShovels().execute());
         } catch (final Exception e) {
             throw new RuntimeException("Unable to retrieve existing shovels, skipping reconciliation of shovels", e);
         }
@@ -82,7 +83,7 @@ public class ShovelReconciler {
             final String shovelName = existingShovel.getKey();
             if (!desiredShovelMap.containsKey(shovelName)) {
                 try {
-                    apiClient.deleteShovel(existingShovel.getValue().getVhost(), shovelName);
+                    RabbitApiResponseConsumer.consumeResponse(apiClient.deleteShovel(existingShovel.getValue().getVhost(), shovelName).execute());
                 } catch (final Exception e) {
                     log.error(String.format("Failed to delete shovel with name %s in vhost %s", shovelName, existingShovel.getValue().getVhost()), e);
                 }

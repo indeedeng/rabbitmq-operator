@@ -1,5 +1,6 @@
 package com.indeed.operators.rabbitmq.operations;
 
+import com.indeed.operators.rabbitmq.api.RabbitApiResponseConsumer;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.rabbitmq.admin.RabbitManagementApi;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
@@ -25,7 +26,7 @@ public class AreQueuesEmptyOperation {
         final RabbitManagementApi api = rabbitManagementApiProvider.getApi(connectionInfo);
         final List<Queue> queueStates;
         try {
-            queueStates = api.listQueues();
+            queueStates = RabbitApiResponseConsumer.consumeResponse(api.listQueues().execute());
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }

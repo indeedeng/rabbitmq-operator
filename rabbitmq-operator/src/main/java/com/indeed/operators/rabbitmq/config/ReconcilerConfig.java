@@ -17,7 +17,7 @@ import com.indeed.operators.rabbitmq.operations.AreQueuesEmptyOperation;
 import com.indeed.operators.rabbitmq.reconciliation.ClusterReconciliationOrchestrator;
 import com.indeed.operators.rabbitmq.reconciliation.NetworkPartitionReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.RabbitMQClusterReconciler;
-import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.UserReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.OperatorPolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.PolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
@@ -65,7 +65,7 @@ public class ReconcilerConfig {
             final PodDisruptionBudgetController podDisruptionBudgetController,
             final PersistentVolumeClaimController persistentVolumeClaimController,
             final ShovelReconciler shovelReconciler,
-            final ClusterUsersReconciler usersReconciler,
+            final UserReconciler usersReconciler,
             final PolicyReconciler policyReconciler,
             final OperatorPolicyReconciler operatorPolicyReconciler
     ) {
@@ -93,12 +93,12 @@ public class ReconcilerConfig {
     }
 
     @Bean
-    public ClusterUsersReconciler rabbitMQUserReconciler(
+    public UserReconciler rabbitMQUserReconciler(
             final SecretsController secretsController,
             final RabbitManagementApiProvider managementApiProvider,
             final RabbitMQPasswordConverter passwordConverter
     ) {
-        return new ClusterUsersReconciler(secretsController, managementApiProvider, passwordConverter);
+        return new UserReconciler(secretsController, managementApiProvider, passwordConverter);
     }
 
     @Bean

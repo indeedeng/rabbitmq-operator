@@ -3,6 +3,7 @@ package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.indeed.operators.rabbitmq.Constants;
+import com.indeed.operators.rabbitmq.api.RabbitApiResponseConsumer;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
@@ -19,21 +20,20 @@ import io.fabric8.kubernetes.api.model.Secret;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class ClusterUsersReconciler {
+public class UserReconciler {
     private static final Set<String> READ_ONLY_USERS = ImmutableSet.of("rabbit", "monitoring");
-    private static final Logger log = LoggerFactory.getLogger(ClusterUsersReconciler.class);
+    private static final Logger log = LoggerFactory.getLogger(UserReconciler.class);
 
     private final SecretsController secretsController;
     private final RabbitManagementApiProvider managementApiProvider;
     private final RabbitMQPasswordConverter passwordConverter;
 
-    public ClusterUsersReconciler(
+    public UserReconciler(
             final SecretsController secretsController,
             final RabbitManagementApiProvider managementApiProvider,
             final RabbitMQPasswordConverter passwordConverter
@@ -54,7 +54,9 @@ public class ClusterUsersReconciler {
         final Map<String, User> existingUsers;
         final RabbitManagementApi apiClient = managementApiProvider.getApi(connectionInfo);
         try {
-            existingUsers = apiClient.listUsers().stream().collect(Collectors.toMap(User::getName, user -> user));
+            existingUsers = RabbitApiResponseConsumer.consumeResponse(apiClient.listUsers().execute())
+                    .stream()
+                    .collect(Collectors.toMap(User::getName, user -> user));
         } catch (final Exception e) {
             throw new RuntimeException(String.format("Failed to retrieve existing users from cluster %s in namespace %s, so skipping user reconciliation for this cluster", cluster.getName(), cluster.getNamespace()), e);
         }
@@ -62,7 +64,7 @@ public class ClusterUsersReconciler {
         for (final Map.Entry<String, User> existingUser : existingUsers.entrySet()) {
             if (!expectedUsers.containsKey(existingUser.getKey()) && !READ_ONLY_USERS.contains(existingUser.getKey())) {
                 try {
-                    apiClient.deleteUser(existingUser.getKey());
+                    RabbitApiResponseConsumer.consumeResponse(apiClient.deleteUser(existingUser.getKey()).execute());
                 } catch (final Exception e) {
                     log.error(String.format("Failed to delete user %s", existingUser), e);
                 }
@@ -95,7 +97,7 @@ public class ClusterUsersReconciler {
     private void createOrUpdateUser(final RabbitManagementApi apiClient, final RabbitMQUser desiredUser, final String password) {
         try {
             final User user = new User().withName(desiredUser.getUsername()).withPassword(password).withTags(Joiner.on(",").join(desiredUser.getTags()));
-            apiClient.createUser(user.getName(), user);
+            RabbitApiResponseConsumer.consumeResponse(apiClient.createUser(user.getName(), user).execute());
         } catch (final Exception e) {
             log.error(String.format("Failed to create/update user %s", desiredUser.getUsername()), e);
         }
@@ -112,7 +114,7 @@ public class ClusterUsersReconciler {
                         .withWrite(Pattern.compile(vhost.getPermissions().getWrite()))
                         .withConfigure(Pattern.compile(vhost.getPermissions().getConfigure()));
 
-                apiClient.createPermission(vhost.getVhostName(), user.getUsername(), permissions);
+                RabbitApiResponseConsumer.consumeResponse(apiClient.createPermission(vhost.getVhostName(), user.getUsername(), permissions).execute());
             } catch (final Exception ex) {
                 log.error(String.format("Failed to set vhost permissions for user %s in vhost %s", user.getUsername(), vhost.getVhostName()), ex);
             }

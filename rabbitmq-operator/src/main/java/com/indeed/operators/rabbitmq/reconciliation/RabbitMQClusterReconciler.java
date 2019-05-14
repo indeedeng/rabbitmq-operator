@@ -9,7 +9,7 @@ import com.indeed.operators.rabbitmq.controller.crd.RabbitMQResourceController;
 import com.indeed.operators.rabbitmq.model.Labels;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
-import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.ClusterUsersReconciler;
+import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.UserReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.OperatorPolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.PolicyReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
@@ -36,7 +36,7 @@ public class RabbitMQClusterReconciler {
     private final PodDisruptionBudgetController podDisruptionBudgetController;
     private final PersistentVolumeClaimController persistentVolumeClaimController;
     private final ShovelReconciler shovelReconciler;
-    private final ClusterUsersReconciler usersReconciler;
+    private final UserReconciler usersReconciler;
     private final PolicyReconciler policyReconciler;
     private final OperatorPolicyReconciler operatorPolicyReconciler;
 
@@ -49,7 +49,7 @@ public class RabbitMQClusterReconciler {
             final PodDisruptionBudgetController podDisruptionBudgetController,
             final PersistentVolumeClaimController persistentVolumeClaimController,
             final ShovelReconciler shovelReconciler,
-            final ClusterUsersReconciler usersReconciler,
+            final UserReconciler usersReconciler,
             final PolicyReconciler policyReconciler,
             final OperatorPolicyReconciler operatorPolicyReconciler
     ) {
