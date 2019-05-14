@@ -14,7 +14,7 @@ repositories {
 dependencies {
     compile project(':rabbitmq-operator-model')
 
-    compile 'com.indeed:rabbitmq-admin:1.0.0'
+    compile 'com.indeed:rabbitmq-admin:1.0.1'
     compile 'io.fabric8:kubernetes-client:4.1.3'
     compile 'com.google.guava:guava:27.0.1-jre'
     compile 'org.slf4j:slf4j-api'

@@ -1,6 +1,7 @@
 package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.api.RabbitApiResponseConsumer;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
@@ -54,7 +55,10 @@ public class ShovelReconciler {
                     .map(addr -> String.format("amqp://%s:%s@%s", username, password, addr.asRabbitUri()))
                     .collect(Collectors.toList());
 
-            final ShovelArguments shovelArguments = new ShovelArguments().withSrcQueue(desiredShovel.getSource().getQueue()).withDestUri(uris);
+            final ShovelArguments shovelArguments = new ShovelArguments()
+                    .withSrcUri(Lists.newArrayList("amqp://"))
+                    .withSrcQueue(desiredShovel.getSource().getQueue())
+                    .withDestUri(uris);
             final Shovel shovel = new Shovel().withValue(shovelArguments).withVhost(desiredShovel.getSource().getVhost()).withName(desiredShovel.getName());
 
             try {

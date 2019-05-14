@@ -83,8 +83,8 @@ public class RabbitMQClusterReconciler {
                 deleteDanglingPvcs(resource, currentReplicaCount);
             }
 
-            shovelReconciler.reconcile(cluster);
             usersReconciler.reconcile(cluster);
+            shovelReconciler.reconcile(cluster);
             policyReconciler.reconcile(cluster);
             operatorPolicyReconciler.reconcile(cluster);
 
