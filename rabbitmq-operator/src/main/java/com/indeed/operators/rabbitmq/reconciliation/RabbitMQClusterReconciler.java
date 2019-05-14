@@ -83,8 +83,9 @@ public class RabbitMQClusterReconciler {
                 deleteDanglingPvcs(resource, currentReplicaCount);
             }
 
-            shovelReconciler.reconcile(cluster);
+            // Users should be reconciled before shovels so that those users are available for shovels to use
             usersReconciler.reconcile(cluster);
+            shovelReconciler.reconcile(cluster);
             policyReconciler.reconcile(cluster);
             operatorPolicyReconciler.reconcile(cluster);
 

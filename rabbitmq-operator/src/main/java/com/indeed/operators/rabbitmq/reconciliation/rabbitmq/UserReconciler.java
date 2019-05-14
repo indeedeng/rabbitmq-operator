@@ -82,9 +82,9 @@ public class UserReconciler {
 
     private void createUser(final RabbitManagementApi apiClient, final RabbitMQUser desiredUser) {
         final Secret userSecret = desiredUser.getUserSecret();
-        secretsController.createOrUpdate(userSecret);
+        final Secret createdSecret = secretsController.createOrUpdate(userSecret);
 
-        createOrUpdateUser(apiClient, desiredUser, passwordConverter.convertPasswordToHash(userSecret.getStringData().get(Constants.Secrets.PASSWORD_KEY)));
+        createOrUpdateUser(apiClient, desiredUser, passwordConverter.convertPasswordToHash(secretsController.decodeSecretPayload(createdSecret.getData().get(Constants.Secrets.PASSWORD_KEY))));
     }
 
     private void updateExistingUser(final RabbitManagementApi apiClient, final RabbitMQUser desiredUser) {
@@ -94,9 +94,9 @@ public class UserReconciler {
         createOrUpdateUser(apiClient, desiredUser, passwordConverter.convertPasswordToHash(secretsController.decodeSecretPayload(userSecret.getData().get(Constants.Secrets.PASSWORD_KEY))));
     }
 
-    private void createOrUpdateUser(final RabbitManagementApi apiClient, final RabbitMQUser desiredUser, final String password) {
+    private void createOrUpdateUser(final RabbitManagementApi apiClient, final RabbitMQUser desiredUser, final String passwordHash) {
         try {
-            final User user = new User().withName(desiredUser.getUsername()).withPassword(password).withTags(Joiner.on(",").join(desiredUser.getTags()));
+            final User user = new User().withName(desiredUser.getUsername()).withPasswordHash(passwordHash).withTags(Joiner.on(",").join(desiredUser.getTags()));
             RabbitApiResponseConsumer.consumeResponse(apiClient.createUser(user.getName(), user).execute());
         } catch (final Exception e) {
             log.error(String.format("Failed to create/update user %s", desiredUser.getUsername()), e);

@@ -1,6 +1,7 @@
 package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.api.RabbitApiResponseConsumer;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
@@ -19,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.indeed.operators.rabbitmq.Constants.Uris.AMQP_BASE;
 
 public class ShovelReconciler {
     private static final Logger log = LoggerFactory.getLogger(ShovelReconciler.class);
@@ -51,10 +54,13 @@ public class ShovelReconciler {
             final String password = secretsController.decodeSecretPayload(secret.getData().get(Constants.Secrets.PASSWORD_KEY));
 
             final List<String> uris = desiredShovel.getDestination().getAddresses().stream()
-                    .map(addr -> String.format("amqp://%s:%s@%s", username, password, addr.asRabbitUri()))
+                    .map(addr -> String.format("%s%s:%s@%s", AMQP_BASE, username, password, addr.asRabbitUri()))
                     .collect(Collectors.toList());
 
-            final ShovelArguments shovelArguments = new ShovelArguments().withSrcQueue(desiredShovel.getSource().getQueue()).withDestUri(uris);
+            final ShovelArguments shovelArguments = new ShovelArguments()
+                    .withSrcUri(Lists.newArrayList(AMQP_BASE))
+                    .withSrcQueue(desiredShovel.getSource().getQueue())
+                    .withDestUri(uris);
             final Shovel shovel = new Shovel().withValue(shovelArguments).withVhost(desiredShovel.getSource().getVhost()).withName(desiredShovel.getName());
 
             try {
