@@ -19,12 +19,14 @@ Provision and manage RabbitMQ clusters on Kubernetes! This operator currently ha
 ## Prerequisites
 You must have a Kubernetes cluster. Standard Pod and Service networking must work.
 
+You must also have a Docker registry that both your development environment and the Kubernetes cluster can access via the CNAME `registry.local.tld`
+
 The example assumes you have Rook-managed storage deployed. You can read about Rook at https://rook.io/.
 
 ## Deploying the operator
-Apply the [operator configuration yaml](examples/rabbitmq_operator.yaml). You should see a `rabbitmq-operator` pod spin up in the `rabbitmqs` namespace.
+Use the script `deploy-operator.sh` to build and push the operator image. At the end you should see a `rabbitmq-operator` pod spin up in the `rabbitmqs` namespace.
 ```
-kubectl apply -f examples/rabbitmq_operator.yaml
+LOCAL_DOCKER_REGISTRY=registry.local.tld ./scripts/deploy-operator.sh
 ```
 
 ## Deploying a cluster
