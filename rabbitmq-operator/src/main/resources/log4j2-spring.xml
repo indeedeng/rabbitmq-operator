@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
+<Configuration status="WARN" xmlns:xi="http://www.w3.org/2001/XInclude">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %notEmpty{[%notEmpty{ns: %X{namespace}; }%notEmpty{resource: %X{resourceName}; }%notEmpty{cluster: %X{clusterName}; }%notEmpty{type: %X{type}}] }%m%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c:%L - %notEmpty{[%notEmpty{ns: %X{namespace}; }%notEmpty{resource: %X{resourceName}; }%notEmpty{cluster: %X{clusterName}; }%notEmpty{type: %X{type}}] }%m%n"/>
         </Console>
     </Appenders>
-    <Loggers>
-        <Root level="info">
-            <AppenderRef ref="Console"/>
-        </Root>
-    </Loggers>
+
+    <!-- Allow customization of logging levels without requiring recompilation.  This file is
+         mounted from a ConfigMap.  If it's not present, the fallback value is used. -->
+    <xi:include href="file:/logging-configuration/custom-logger-levels.xml">
+        <xi:fallback>
+            <Loggers>
+                <Root level="info">
+                    <AppenderRef ref="Console"/>
+                </Root>
+            </Loggers>
+        </xi:fallback>
+    </xi:include>
 </Configuration>
