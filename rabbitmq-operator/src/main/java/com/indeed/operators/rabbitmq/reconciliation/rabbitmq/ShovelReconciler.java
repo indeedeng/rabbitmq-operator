@@ -3,11 +3,11 @@ package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.indeed.operators.rabbitmq.Constants;
+import com.indeed.operators.rabbitmq.api.RabbitManagementApiException;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiFacade;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.AddressAndVhost;
-import com.indeed.operators.rabbitmq.model.crd.rabbitmq.ShovelSpec;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.rabbitmq.admin.pojo.Shovel;
 import com.indeed.rabbitmq.admin.pojo.ShovelArguments;
@@ -38,47 +38,74 @@ public class ShovelReconciler {
     public void reconcile(final RabbitMQCluster cluster) {
         final RabbitManagementApiFacade apiClient = apiProvider.getApi(cluster);
 
-        deleteObsoleteShovels(cluster, apiClient);
+        final Map<String, Shovel> desiredShovels = cluster.getShovels().stream()
+                .map(shovelSpec -> {
+                    final String destSecretName = shovelSpec.getDestination().getSecretName();
+                    final String destSecretNamespace = shovelSpec.getDestination().getSecretNamespace();
+                    final Secret secret = secretsController.get(destSecretName, destSecretNamespace);
 
-        for (final ShovelSpec desiredShovel : cluster.getShovels()) {
-            final String destSecretName = desiredShovel.getDestination().getSecretName();
-            final String destSecretNamespace = desiredShovel.getDestination().getSecretNamespace();
-            final Secret secret = secretsController.get(destSecretName, destSecretNamespace);
+                    Preconditions.checkNotNull(secret, String.format("Could not find secret with name [%s] in namespace [%s]", destSecretName, destSecretNamespace));
 
-            Preconditions.checkNotNull(secret, String.format("Could not find secret with name [%s] in namespace [%s]", destSecretName, destSecretNamespace));
+                    final List<String> uris = shovelSpec.getDestination().getAddresses().stream()
+                            .map(addr -> buildShovelUri(secret, addr))
+                            .collect(Collectors.toList());
 
-            final List<String> uris = desiredShovel.getDestination().getAddresses().stream()
-                    .map(addr -> buildShovelUri(secret, addr))
-                    .collect(Collectors.toList());
+                    final ShovelArguments shovelArguments = new ShovelArguments()
+                            .withSrcUri(Lists.newArrayList(AMQP_BASE))
+                            .withSrcQueue(shovelSpec.getSource().getQueue())
+                            .withDestUri(uris);
+                    return new Shovel().withValue(shovelArguments).withVhost(shovelSpec.getSource().getVhost()).withName(shovelSpec.getName());
+                })
+                .collect(Collectors.toMap(Shovel::getName, shovel -> shovel));
+        final Map<String, Shovel> existingShovels = apiClient.listShovels().stream()
+                .collect(Collectors.toMap(Shovel::getName, shovel -> shovel));
 
-            final ShovelArguments shovelArguments = new ShovelArguments()
-                    .withSrcUri(Lists.newArrayList(AMQP_BASE))
-                    .withSrcQueue(desiredShovel.getSource().getQueue())
-                    .withDestUri(uris);
-            final Shovel shovel = new Shovel().withValue(shovelArguments).withVhost(desiredShovel.getSource().getVhost()).withName(desiredShovel.getName());
+        deleteObsoleteShovels(desiredShovels, existingShovels, apiClient);
+        createMissingShovels(desiredShovels, existingShovels, apiClient);
+        updateExistingShovels(desiredShovels, existingShovels, apiClient);
+    }
 
+    private void createMissingShovels(final Map<String, Shovel> desiredShovels, final Map<String, Shovel> existingShovels, final RabbitManagementApiFacade apiClient) {
+        final List<Shovel> shovelsToCreate = desiredShovels.entrySet().stream()
+                .filter(desiredShovel -> !existingShovels.containsKey(desiredShovel.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+
+        for (final Shovel shovel : shovelsToCreate) {
             try {
                 apiClient.createShovel(shovel.getVhost(), shovel.getName(), shovel);
-            } catch (final Exception e) {
+            } catch (final RabbitManagementApiException e) {
                 log.error(String.format("Failed to create shovel with name %s in vhost %s", shovel.getName(), shovel.getVhost()), e);
             }
         }
     }
 
-    private void deleteObsoleteShovels(final RabbitMQCluster cluster, final RabbitManagementApiFacade apiClient) {
-        final Map<String, Shovel> existingShovelMap = apiClient.listShovels().stream()
-                .collect(Collectors.toMap(Shovel::getName, shovel -> shovel));
-        final Map<String, ShovelSpec> desiredShovelMap = cluster.getShovels().stream()
-                .collect(Collectors.toMap(ShovelSpec::getName, shovel -> shovel));
+    private void updateExistingShovels(final Map<String, Shovel> desiredShovels, final Map<String, Shovel> existingShovels, final RabbitManagementApiFacade apiClient) {
+        final List<Shovel> shovelsToUpdate = desiredShovels.entrySet().stream()
+                .filter(desiredShovel -> existingShovels.containsKey(desiredShovel.getKey()) && !shovelsMatch(desiredShovel.getValue(), existingShovels.get(desiredShovel.getKey())))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
 
-        for (final Map.Entry<String, Shovel> existingShovel : existingShovelMap.entrySet()) {
-            final String shovelName = existingShovel.getKey();
-            if (!desiredShovelMap.containsKey(shovelName)) {
-                try {
-                    apiClient.deleteShovel(existingShovel.getValue().getVhost(), shovelName);
-                } catch (final Exception e) {
-                    log.error(String.format("Failed to delete shovel with name %s in vhost %s", shovelName, existingShovel.getValue().getVhost()), e);
-                }
+        for (final Shovel shovel : shovelsToUpdate) {
+            try {
+                apiClient.createShovel(shovel.getVhost(), shovel.getName(), shovel);
+            } catch (final RabbitManagementApiException e) {
+                log.error(String.format("Failed to update shovel with name %s in vhost %s", shovel.getName(), shovel.getVhost()), e);
+            }
+        }
+    }
+
+    private void deleteObsoleteShovels(final Map<String, Shovel> desiredShovels, final Map<String, Shovel> existingShovels, final RabbitManagementApiFacade apiClient) {
+        final List<Shovel> shovelsToDelete = existingShovels.entrySet().stream()
+                .filter(existingShovel -> !desiredShovels.containsKey(existingShovel.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+
+        for (final Shovel existingShovel : shovelsToDelete) {
+            try {
+                apiClient.deleteShovel(existingShovel.getVhost(), existingShovel.getName());
+            } catch (final Exception e) {
+                log.error(String.format("Failed to delete shovel with name %s in vhost %s", existingShovel.getName(), existingShovel.getVhost()), e);
             }
         }
     }
@@ -88,5 +115,12 @@ public class ShovelReconciler {
         final String password = secretsController.decodeSecretPayload(shovelSecret.getData().get(Constants.Secrets.PASSWORD_KEY));
 
         return String.format("%s%s:%s@%s", AMQP_BASE, username, password, rabbitAddress.asRabbitUri());
+    }
+
+    private boolean shovelsMatch(final Shovel desired, final Shovel existing) {
+        return existing != null &&
+                desired.getValue().equals(existing.getValue()) &&
+                desired.getVhost().equals(existing.getVhost()) &&
+                desired.getName().equals(existing.getName());
     }
 }

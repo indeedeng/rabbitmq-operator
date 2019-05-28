@@ -19,9 +19,11 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -90,6 +92,29 @@ public class TestPolicyReconciler {
         assertEquals(Policy.ApplyTo.EXCHANGES, capturedPolicy.getApplyTo());
         assertEquals(desiredPolicy.getDefinition().asDefinition(), capturedPolicy.getDefinition());
         assertEquals(5L, capturedPolicy.getPriority());
+    }
+
+    @Test
+    public void testReconcile_skipUpToDatePolicy() {
+        final PolicyDefinitionSpec policyDefinitionSpec = new PolicyDefinitionSpec("new alt exchange", null, null, null, null, null, null, null, null, null, null, null, null);
+        final PolicySpec desiredPolicy = new PolicySpec("vhost", "name", "pattern", "queues", policyDefinitionSpec, 5);
+        final Policy existingPolicy = new Policy()
+                .withVhost("vhost")
+                .withName("name")
+                .withPattern(Pattern.compile("pattern"))
+                .withApplyTo(Policy.ApplyTo.QUEUES)
+                .withDefinition(desiredPolicy.getDefinition().asDefinition())
+                .withPriority(5L);
+        final RabbitMQCluster cluster = buildCluster(Lists.newArrayList(desiredPolicy));
+
+        final RabbitManagementApiFacade api = mock(RabbitManagementApiFacade.class);
+
+        when(apiProvider.getApi(cluster)).thenReturn(api);
+        when(api.listPolicies()).thenReturn(Lists.newArrayList(existingPolicy));
+
+        policyReconciler.reconcile(cluster);
+
+        verify(api, never()).createPolicy(any(), any(), any(Policy.class));
     }
 
     @Test
