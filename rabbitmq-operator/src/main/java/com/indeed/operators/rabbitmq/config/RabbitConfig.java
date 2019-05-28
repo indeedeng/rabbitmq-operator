@@ -36,7 +36,7 @@ public class RabbitConfig {
     public RabbitMQSecrets rabbitSecrets(
             final Function<Integer, String> randomStringGenerator
     ) {
-        return new RabbitMQSecrets(randomStringGenerator, DEFAULT_USERNAME);
+        return new RabbitMQSecrets(randomStringGenerator);
     }
 
     @Bean

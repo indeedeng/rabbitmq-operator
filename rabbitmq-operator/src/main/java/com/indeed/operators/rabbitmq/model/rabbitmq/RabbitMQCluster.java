@@ -27,7 +27,7 @@ public class RabbitMQCluster {
     private final List<PolicySpec> policies;
     private final List<OperatorPolicySpec> operatorPolicies;
 
-    public RabbitMQCluster(
+    private RabbitMQCluster(
             final String name,
             final String namespace,
             final Secret adminSecret,
@@ -107,5 +107,108 @@ public class RabbitMQCluster {
 
     public List<OperatorPolicySpec> getOperatorPolicies() {
         return operatorPolicies;
+    }
+
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String name;
+        private String namespace;
+        private Secret adminSecret;
+        private Secret erlangCookieSecret;
+        private Service mainService;
+        private Service discoveryService;
+        private Optional<Service> loadBalancerService;
+        private StatefulSet statefulSet;
+        private PodDisruptionBudget podDisruptionBudget;
+        private List<ShovelSpec> shovels;
+        private List<RabbitMQUser> users;
+        private List<PolicySpec> policies;
+        private List<OperatorPolicySpec> operatorPolicies;
+
+        public Builder withName(final String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder withNamespace(final String namespace) {
+            this.namespace = namespace;
+            return this;
+        }
+
+        public Builder withAdminSecret(final Secret adminSecret) {
+            this.adminSecret = adminSecret;
+            return this;
+        }
+
+        public Builder withErlangCookieSecret(final Secret erlangCookieSecret) {
+            this.erlangCookieSecret = erlangCookieSecret;
+            return this;
+        }
+
+        public Builder withMainService(final Service mainService) {
+            this.mainService = mainService;
+            return this;
+        }
+
+        public Builder withDiscoveryService(final Service discoveryService) {
+            this.discoveryService = discoveryService;
+            return this;
+        }
+
+        public Builder withLoadBalancerService(final Optional<Service> loadBalancerService) {
+            this.loadBalancerService = loadBalancerService;
+            return this;
+        }
+
+        public Builder withStatefulSet(final StatefulSet statefulSet) {
+            this.statefulSet = statefulSet;
+            return this;
+        }
+
+        public Builder withPodDisruptionBudget(final PodDisruptionBudget podDisruptionBudget) {
+            this.podDisruptionBudget = podDisruptionBudget;
+            return this;
+        }
+
+        public Builder withShovels(final List<ShovelSpec> shovels) {
+            this.shovels = shovels;
+            return this;
+        }
+
+        public Builder withUsers(final List<RabbitMQUser> users) {
+            this.users = users;
+            return this;
+        }
+
+        public Builder withPolicies(final List<PolicySpec> policies) {
+            this.policies = policies;
+            return this;
+        }
+
+        public Builder withOperatorPolicies(final List<OperatorPolicySpec> operatorPolicies) {
+            this.operatorPolicies = operatorPolicies;
+            return this;
+        }
+
+        public RabbitMQCluster build() {
+            return new RabbitMQCluster(
+                    name,
+                    namespace,
+                    adminSecret,
+                    erlangCookieSecret,
+                    mainService,
+                    discoveryService,
+                    loadBalancerService,
+                    statefulSet,
+                    podDisruptionBudget,
+                    shovels,
+                    users,
+                    policies,
+                    operatorPolicies
+            );
+        }
     }
 }

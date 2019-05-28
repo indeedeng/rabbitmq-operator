@@ -16,8 +16,35 @@ spec:
     limit: "1Gi"
   clusterSpec:
     highWatermarkFraction: 0.4
+    policies:
+      - name: "mypolicy"
+        vhost: "/"
+        pattern: ".*"
+        applyTo: "queues"
+        definition:
+          ha-mode: "exactly"
+          ha-params: 2
+          ha-sync-mode: "automatic"
+    operatorPolicies:
+      - name: "myoperatorpolicy"
+        vhost: "/"
+        pattern: ".*"
+        applyTo: "queues"
+        definition:
+          max-length: 1000
+    shovels:
+      - name: "myshovel"
+        source:
+          queue: "myqueue"
+          vhost: "/"
+        destination:
+          addresses:
+            - address: "myrabbitmq-svc" # shovel messages from this cluster to itself
+              vhost: "/"
+          secretName: "mynewadmin-myrabbitmq-user-secret" # user created below
+          secretNamespace: "rabbitmqs"
     users:
-      - username: mynewadmin
+      - username: "mynewadmin"
         tags:
           - "administrator"
         vhosts:

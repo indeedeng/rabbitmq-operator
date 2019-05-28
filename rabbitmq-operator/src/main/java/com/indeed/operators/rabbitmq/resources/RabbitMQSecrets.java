@@ -11,17 +11,16 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 
 import java.util.function.Function;
 
+import static com.indeed.operators.rabbitmq.Constants.DEFAULT_USERNAME;
+
 public class RabbitMQSecrets {
 
     private final Function<Integer, String> randomStringGenerator;
-    private final String rabbitUsername;
 
     public RabbitMQSecrets(
-            final Function<Integer, String> randomStringGenerator,
-            final String rabbitUsername
+            final Function<Integer, String> randomStringGenerator
     ) {
         this.randomStringGenerator = Preconditions.checkNotNull(randomStringGenerator);
-        this.rabbitUsername = Preconditions.checkNotNull(rabbitUsername);
     }
 
     public Secret createClusterSecret(final RabbitMQCustomResource rabbit) {
@@ -30,7 +29,7 @@ public class RabbitMQSecrets {
         final String password = randomStringGenerator.apply(30);
 
         return new SecretBuilder()
-                .addToStringData(Constants.Secrets.USERNAME_KEY, rabbitUsername)
+                .addToStringData(Constants.Secrets.USERNAME_KEY, DEFAULT_USERNAME)
                 .addToStringData(Constants.Secrets.PASSWORD_KEY, password)
                 .withNewMetadata()
                     .withName(getClusterSecretName(clusterName))

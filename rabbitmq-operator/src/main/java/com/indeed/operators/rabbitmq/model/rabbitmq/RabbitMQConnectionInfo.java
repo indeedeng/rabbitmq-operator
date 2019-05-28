@@ -62,4 +62,8 @@ public class RabbitMQConnectionInfo {
     public int hashCode() {
         return Objects.hashCode(clusterName, namespace, serviceName, nodeName);
     }
+
+    public static RabbitMQConnectionInfo fromCluster(final RabbitMQCluster cluster) {
+        return new RabbitMQConnectionInfo(cluster.getName(), cluster.getNamespace(), cluster.getDiscoveryService().getMetadata().getName());
+    }
 }

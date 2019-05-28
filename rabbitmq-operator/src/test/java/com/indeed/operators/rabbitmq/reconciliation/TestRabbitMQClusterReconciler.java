@@ -149,10 +149,21 @@ public class TestRabbitMQClusterReconciler {
         when(controller.get(rec.getResourceName(), rec.getNamespace())).thenReturn(scaledResource);
 
         when(clusterFactory.fromCustomResource(scaledResource)).thenReturn(
-                new RabbitMQCluster(
-                        // Most of these parameters don't matter.
-                        NAME, NAMESPACE, null, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList()
-                )
+                RabbitMQCluster.newBuilder()
+                        .withName(NAME)
+                        .withNamespace(NAMESPACE)
+                        .withAdminSecret(null)
+                        .withErlangCookieSecret(null)
+                        .withMainService(null)
+                        .withDiscoveryService(null)
+                        .withLoadBalancerService(Optional.empty())
+                        .withStatefulSet(originalStatefulSet)
+                        .withPodDisruptionBudget(null)
+                        .withShovels(Lists.newArrayList())
+                        .withUsers(Lists.newArrayList())
+                        .withPolicies(Lists.newArrayList())
+                        .withOperatorPolicies(Lists.newArrayList())
+                        .build()
         );
 
         // This call will happen twice.  In both cases it will occur before the StatefulSet has been patched, hence it
@@ -195,10 +206,21 @@ public class TestRabbitMQClusterReconciler {
         when(controller.get(rec.getResourceName(), rec.getNamespace())).thenReturn(scaledResource);
 
         when(clusterFactory.fromCustomResource(scaledResource)).thenReturn(
-                new RabbitMQCluster(
-                        // Most of these parameters don't matter.
-                        NAME, NAMESPACE, null, null, null, null, Optional.empty(), originalStatefulSet, null, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList()
-                )
+                RabbitMQCluster.newBuilder()
+                        .withName(NAME)
+                        .withNamespace(NAMESPACE)
+                        .withAdminSecret(null)
+                        .withErlangCookieSecret(null)
+                        .withMainService(null)
+                        .withDiscoveryService(null)
+                        .withLoadBalancerService(Optional.empty())
+                        .withStatefulSet(originalStatefulSet)
+                        .withPodDisruptionBudget(null)
+                        .withShovels(Lists.newArrayList())
+                        .withUsers(Lists.newArrayList())
+                        .withPolicies(Lists.newArrayList())
+                        .withOperatorPolicies(Lists.newArrayList())
+                        .build()
         );
 
         // This call will happen twice.  In both cases it will occur before the StatefulSet has been patched, hence it

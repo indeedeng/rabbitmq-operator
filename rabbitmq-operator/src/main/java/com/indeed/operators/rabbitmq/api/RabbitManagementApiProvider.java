@@ -2,6 +2,7 @@ package com.indeed.operators.rabbitmq.api;
 
 import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
+import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
 import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
 import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
@@ -16,7 +17,7 @@ import java.util.Map;
 
 public class RabbitManagementApiProvider {
 
-    private final Map<RabbitMQConnectionInfo, RabbitManagementApi> rabbitApis;
+    private final Map<RabbitMQConnectionInfo, RabbitManagementApiFacade> rabbitApis;
     private final SecretsController secretsController;
 
     public RabbitManagementApiProvider(
@@ -26,7 +27,7 @@ public class RabbitManagementApiProvider {
         this.secretsController = secretsController;
     }
 
-    public RabbitManagementApi getApi(final RabbitMQConnectionInfo connectionInfo) {
+    public RabbitManagementApiFacade getApi(final RabbitMQConnectionInfo connectionInfo) {
         if (rabbitApis.containsKey(connectionInfo)) {
             return rabbitApis.get(connectionInfo);
         }
@@ -45,10 +46,15 @@ public class RabbitManagementApiProvider {
                     secretsController.decodeSecretPayload(adminSecret.getData().get(Constants.Secrets.PASSWORD_KEY))
             );
 
-            rabbitApis.put(connectionInfo, api);
+            final RabbitManagementApiFacade facade = new RabbitManagementApiFacade(api);
+            rabbitApis.put(connectionInfo, facade);
 
-            return api;
+            return facade;
         }
+    }
+
+    public RabbitManagementApiFacade getApi(final RabbitMQCluster rabbitMQCluster) {
+        return getApi(RabbitMQConnectionInfo.fromCluster(rabbitMQCluster));
     }
 
     private URI buildApiUri(final RabbitMQConnectionInfo connectionInfo) {
