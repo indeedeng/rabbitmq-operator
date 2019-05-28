@@ -2,31 +2,23 @@ package com.indeed.operators.rabbitmq.operations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+import com.indeed.operators.rabbitmq.api.RabbitManagementApiFacade;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
-import com.indeed.rabbitmq.admin.RabbitManagementApi;
-import com.indeed.rabbitmq.admin.RabbitManagementApiFactory;
 import com.indeed.rabbitmq.admin.pojo.Queue;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TestAreQueuesEmptyOperation {
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Mock
     private RabbitManagementApiProvider apiCache;
@@ -34,72 +26,50 @@ public class TestAreQueuesEmptyOperation {
     @InjectMocks
     private AreQueuesEmptyOperation operation;
 
-    private MockWebServer mockWebServer;
-
-    @BeforeEach
-    public void setup() {
-        mockWebServer = new MockWebServer();
-    }
-
-    @AfterEach
-    public void cleanup() throws IOException {
-        mockWebServer.shutdown();
-    }
-
     @Test
-    public void testAllQueuesEmpty() throws IOException {
+    public void testAllQueuesEmpty() {
         final RabbitMQConnectionInfo connectionInfo = new RabbitMQConnectionInfo("username", "password", "nodename", "servicename");
 
         final Queue queue1 = new Queue().withName("queue1").withMessages(0L);
         final Queue queue2 = new Queue().withName("queue2").withMessages(0L);
         final Queue queue3 = new Queue().withName("queue3").withMessages(0L);
 
-        mockWebServer.enqueue(new MockResponse().setBody(MAPPER.writeValueAsString(Lists.newArrayList(queue1, queue2, queue3))));
-
-        mockWebServer.start();
-
-        final RabbitManagementApi apiClient = RabbitManagementApiFactory.newInstance(mockWebServer.url("/api/").uri());
+        final RabbitManagementApiFacade apiClient = mock(RabbitManagementApiFacade.class);
 
         when(apiCache.getApi(connectionInfo)).thenReturn(apiClient);
-        apiClient.listQueues();
+        when(apiClient.listQueues()).thenReturn(Lists.newArrayList(queue1, queue2, queue3));
 
         assertTrue(operation.execute(connectionInfo));
     }
 
     @Test
-    public void testOneQueuesHasMessages() throws IOException {
+    public void testOneQueuesHasMessages() {
         final RabbitMQConnectionInfo connectionInfo = new RabbitMQConnectionInfo("username", "password", "nodename", "servicename");
 
         final Queue queue1 = new Queue().withName("queue1").withMessages(0L);
         final Queue queue2 = new Queue().withName("queue2").withMessages(1L);
         final Queue queue3 = new Queue().withName("queue1").withMessages(0L);
 
-        mockWebServer.enqueue(new MockResponse().setBody(MAPPER.writeValueAsString(Lists.newArrayList(queue1, queue2, queue3))));
-
-        mockWebServer.start();
-
-        final RabbitManagementApi apiClient = RabbitManagementApiFactory.newInstance(mockWebServer.url("/api/").uri());
+        final RabbitManagementApiFacade apiClient = mock(RabbitManagementApiFacade.class);
 
         when(apiCache.getApi(connectionInfo)).thenReturn(apiClient);
+        when(apiClient.listQueues()).thenReturn(Lists.newArrayList(queue1, queue2, queue3));
 
         assertFalse(operation.execute(connectionInfo));
     }
 
     @Test
-    public void testMultipleQueuesHaveMessages() throws IOException {
+    public void testMultipleQueuesHaveMessages() {
         final RabbitMQConnectionInfo connectionInfo = new RabbitMQConnectionInfo("username", "password", "nodename", "servicename");
 
         final Queue queue1 = new Queue().withName("queue1").withMessages(0L);
         final Queue queue2 = new Queue().withName("queue2").withMessages(1L);
         final Queue queue3 = new Queue().withName("queue3").withMessages(1L);
 
-        mockWebServer.enqueue(new MockResponse().setBody(MAPPER.writeValueAsString(Lists.newArrayList(queue1, queue2, queue3))));
-
-        mockWebServer.start();
-
-        final RabbitManagementApi apiClient = RabbitManagementApiFactory.newInstance(mockWebServer.url("/api/").uri());
+        final RabbitManagementApiFacade apiClient = mock(RabbitManagementApiFacade.class);
 
         when(apiCache.getApi(connectionInfo)).thenReturn(apiClient);
+        when(apiClient.listQueues()).thenReturn(Lists.newArrayList(queue1, queue2, queue3));
 
         assertFalse(operation.execute(connectionInfo));
     }

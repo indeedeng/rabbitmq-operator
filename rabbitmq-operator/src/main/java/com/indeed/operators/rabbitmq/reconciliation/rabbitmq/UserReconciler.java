@@ -3,17 +3,14 @@ package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.indeed.operators.rabbitmq.Constants;
-import com.indeed.operators.rabbitmq.api.RabbitApiResponseConsumer;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
+import com.indeed.operators.rabbitmq.api.RabbitManagementApiFacade;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.VhostPermissions;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
-import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQUser;
 import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
-import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
-import com.indeed.rabbitmq.admin.RabbitManagementApi;
 import com.indeed.rabbitmq.admin.pojo.Permission;
 import com.indeed.rabbitmq.admin.pojo.User;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -26,7 +23,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class UserReconciler {
-    private static final Set<String> READ_ONLY_USERS = ImmutableSet.of("rabbit", "monitoring");
+    private static final Set<String> PERMANENT_USERS = ImmutableSet.of("rabbit", "monitoring");
     private static final Logger log = LoggerFactory.getLogger(UserReconciler.class);
 
     private final SecretsController secretsController;
@@ -44,27 +41,19 @@ public class UserReconciler {
     }
 
     public void reconcile(final RabbitMQCluster cluster) {
-        final RabbitMQConnectionInfo connectionInfo = new RabbitMQConnectionInfo(
-                cluster.getName(),
-                cluster.getNamespace(),
-                RabbitMQServices.getDiscoveryServiceName(cluster.getName())
-        );
-
         final Map<String, RabbitMQUser> expectedUsers = cluster.getUsers().stream().collect(Collectors.toMap(RabbitMQUser::getUsername, user -> user));
-        final Map<String, User> existingUsers;
-        final RabbitManagementApi apiClient = managementApiProvider.getApi(connectionInfo);
-        try {
-            existingUsers = RabbitApiResponseConsumer.consumeResponse(apiClient.listUsers().execute())
-                    .stream()
-                    .collect(Collectors.toMap(User::getName, user -> user));
-        } catch (final Exception e) {
-            throw new RuntimeException(String.format("Failed to retrieve existing users from cluster %s in namespace %s, so skipping user reconciliation for this cluster", cluster.getName(), cluster.getNamespace()), e);
-        }
+        final RabbitManagementApiFacade apiClient = managementApiProvider.getApi(cluster);
+
+        final Map<String, User> existingUsers = apiClient.listUsers()
+                .stream()
+                .filter(user -> !PERMANENT_USERS.contains(user.getName()))
+                .collect(Collectors.toMap(User::getName, user -> user));
+
 
         for (final Map.Entry<String, User> existingUser : existingUsers.entrySet()) {
-            if (!expectedUsers.containsKey(existingUser.getKey()) && !READ_ONLY_USERS.contains(existingUser.getKey())) {
+            if (!expectedUsers.containsKey(existingUser.getKey())) {
                 try {
-                    RabbitApiResponseConsumer.consumeResponse(apiClient.deleteUser(existingUser.getKey()).execute());
+                    apiClient.deleteUser(existingUser.getKey());
                 } catch (final Exception e) {
                     log.error(String.format("Failed to delete user %s", existingUser), e);
                 }
@@ -72,32 +61,33 @@ public class UserReconciler {
         }
 
         for (final Map.Entry<String, RabbitMQUser> user : expectedUsers.entrySet()) {
-            if (!existingUsers.containsKey(user.getKey()) && !READ_ONLY_USERS.contains(user.getKey())) {
+            if (!existingUsers.containsKey(user.getKey())) {
                 createUser(apiClient, user.getValue());
-            } else if (!READ_ONLY_USERS.contains(user.getKey())) {
+            } else if (!PERMANENT_USERS.contains(user.getKey())) {
                 updateExistingUser(apiClient, user.getValue());
             }
         }
     }
 
-    private void createUser(final RabbitManagementApi apiClient, final RabbitMQUser desiredUser) {
-        final Secret userSecret = desiredUser.getUserSecret();
-        final Secret createdSecret = secretsController.createOrUpdate(userSecret);
+    private void createUser(final RabbitManagementApiFacade apiClient, final RabbitMQUser desiredUser) {
+        final Secret createdSecret = secretsController.createOrUpdate(desiredUser.getUserSecret());
 
         createOrUpdateUser(apiClient, desiredUser, passwordConverter.convertPasswordToHash(secretsController.decodeSecretPayload(createdSecret.getData().get(Constants.Secrets.PASSWORD_KEY))));
     }
 
-    private void updateExistingUser(final RabbitManagementApi apiClient, final RabbitMQUser desiredUser) {
-        final String username = desiredUser.getUsername();
-        final Secret userSecret = secretsController.get(RabbitMQSecrets.getUserSecretName(username, desiredUser.getClusterMetadata().getName()), desiredUser.getClusterMetadata().getNamespace());
+    private void updateExistingUser(final RabbitManagementApiFacade apiClient, final RabbitMQUser desiredUser) {
+        final Secret userSecret = secretsController.get(RabbitMQSecrets.getUserSecretName(desiredUser.getUsername(), desiredUser.getClusterMetadata().getName()), desiredUser.getClusterMetadata().getNamespace());
 
         createOrUpdateUser(apiClient, desiredUser, passwordConverter.convertPasswordToHash(secretsController.decodeSecretPayload(userSecret.getData().get(Constants.Secrets.PASSWORD_KEY))));
     }
 
-    private void createOrUpdateUser(final RabbitManagementApi apiClient, final RabbitMQUser desiredUser, final String passwordHash) {
+    private void createOrUpdateUser(final RabbitManagementApiFacade apiClient, final RabbitMQUser desiredUser, final String passwordHash) {
         try {
-            final User user = new User().withName(desiredUser.getUsername()).withPasswordHash(passwordHash).withTags(Joiner.on(",").join(desiredUser.getTags()));
-            RabbitApiResponseConsumer.consumeResponse(apiClient.createUser(user.getName(), user).execute());
+            final User user = new User()
+                    .withName(desiredUser.getUsername())
+                    .withPasswordHash(passwordHash)
+                    .withTags(Joiner.on(",").join(desiredUser.getTags()));
+            apiClient.createUser(user.getName(), user);
         } catch (final Exception e) {
             log.error(String.format("Failed to create/update user %s", desiredUser.getUsername()), e);
         }
@@ -106,7 +96,7 @@ public class UserReconciler {
         updateVhosts(apiClient, desiredUser);
     }
 
-    private void updateVhosts(final RabbitManagementApi apiClient, final RabbitMQUser user) {
+    private void updateVhosts(final RabbitManagementApiFacade apiClient, final RabbitMQUser user) {
         for (final VhostPermissions vhost : user.getVhostPermissions()) {
             try {
                 final Permission permissions = new Permission()
@@ -114,7 +104,7 @@ public class UserReconciler {
                         .withWrite(Pattern.compile(vhost.getPermissions().getWrite()))
                         .withConfigure(Pattern.compile(vhost.getPermissions().getConfigure()));
 
-                RabbitApiResponseConsumer.consumeResponse(apiClient.createPermission(vhost.getVhostName(), user.getUsername(), permissions).execute());
+                apiClient.createPermission(vhost.getVhostName(), user.getUsername(), permissions);
             } catch (final Exception ex) {
                 log.error(String.format("Failed to set vhost permissions for user %s in vhost %s", user.getUsername(), vhost.getVhostName()), ex);
             }

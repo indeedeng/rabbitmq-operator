@@ -76,21 +76,21 @@ public class RabbitMQClusterFactory {
 
         final List<RabbitMQUser> users = buildUsers(resource);
 
-        return new RabbitMQCluster(
-                clusterName,
-                namespace,
-                adminSecret,
-                erlangCookieSecret,
-                mainService,
-                discoveryService,
-                loadBalancerService,
-                statefulSet,
-                podDisruptionBudget,
-                resource.getSpec().getClusterSpec().getShovels(),
-                users,
-                spec.getClusterSpec().getPolicies(),
-                spec.getClusterSpec().getOperatorPolicies()
-        );
+        return RabbitMQCluster.newBuilder()
+                .withName(clusterName)
+                .withNamespace(namespace)
+                .withAdminSecret(adminSecret)
+                .withErlangCookieSecret(erlangCookieSecret)
+                .withMainService(mainService)
+                .withDiscoveryService(discoveryService)
+                .withLoadBalancerService(loadBalancerService)
+                .withStatefulSet(statefulSet)
+                .withPodDisruptionBudget(podDisruptionBudget)
+                .withShovels(resource.getSpec().getClusterSpec().getShovels())
+                .withUsers(users)
+                .withPolicies(spec.getClusterSpec().getPolicies())
+                .withOperatorPolicies(spec.getClusterSpec().getOperatorPolicies())
+                .build();
     }
 
     private StatefulSet buildStatefulSet(
@@ -195,7 +195,7 @@ public class RabbitMQClusterFactory {
         return resource.getSpec().getClusterSpec().getUsers().stream()
                 .map(user -> new RabbitMQUser(
                         user.getUsername(),
-                        rabbitMQSecrets.createUserSecret(user.getUsername(), resource),
+                        rabbitMQSecrets.createUserSecret(user.getUsername(), resource), // todo: retrieve the secret if the user already exists
                         resource.getMetadata(),
                         new OwnerReference(
                                 resource.getApiVersion(),

@@ -1,8 +1,7 @@
 package com.indeed.operators.rabbitmq.operations;
 
-import com.indeed.operators.rabbitmq.api.RabbitApiResponseConsumer;
+import com.indeed.operators.rabbitmq.api.RabbitManagementApiFacade;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
-import com.indeed.rabbitmq.admin.RabbitManagementApi;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQConnectionInfo;
 import com.indeed.rabbitmq.admin.pojo.Queue;
 import org.slf4j.Logger;
@@ -23,10 +22,10 @@ public class AreQueuesEmptyOperation {
     }
 
     public boolean execute(final RabbitMQConnectionInfo connectionInfo) {
-        final RabbitManagementApi api = rabbitManagementApiProvider.getApi(connectionInfo);
+        final RabbitManagementApiFacade api = rabbitManagementApiProvider.getApi(connectionInfo);
         final List<Queue> queueStates;
         try {
-            queueStates = RabbitApiResponseConsumer.consumeResponse(api.listQueues().execute());
+            queueStates = api.listQueues();
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
