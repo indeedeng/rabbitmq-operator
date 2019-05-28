@@ -102,7 +102,7 @@ public class UserReconciler {
 
             try {
                 existingPermissions = apiClient.getPermission(vhost.getVhostName(), user.getUsername());
-            } catch (final Exception ex) {
+            } catch (final RabbitManagementApiException ex) {
                 log.error(String.format("Failed to retrieve vhost permissions for user %s in vhost %s", user.getUsername(), vhost.getVhostName()), ex);
                 continue;
             }
