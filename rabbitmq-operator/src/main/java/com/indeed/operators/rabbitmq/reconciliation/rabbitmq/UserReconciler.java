@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class UserReconciler {
-    private static final Set<String> READ_ONLY_USERS = ImmutableSet.of("rabbit", "monitoring");
+    private static final Set<String> PERMANENT_USERS = ImmutableSet.of("rabbit", "monitoring");
     private static final Logger log = LoggerFactory.getLogger(UserReconciler.class);
 
     private final SecretsController secretsController;
@@ -46,7 +46,7 @@ public class UserReconciler {
 
         final Map<String, User> existingUsers = apiClient.listUsers()
                 .stream()
-                .filter(user -> !READ_ONLY_USERS.contains(user.getName()))
+                .filter(user -> !PERMANENT_USERS.contains(user.getName()))
                 .collect(Collectors.toMap(User::getName, user -> user));
 
 
@@ -63,7 +63,7 @@ public class UserReconciler {
         for (final Map.Entry<String, RabbitMQUser> user : expectedUsers.entrySet()) {
             if (!existingUsers.containsKey(user.getKey())) {
                 createUser(apiClient, user.getValue());
-            } else if (!READ_ONLY_USERS.contains(user.getKey())) {
+            } else if (!PERMANENT_USERS.contains(user.getKey())) {
                 updateExistingUser(apiClient, user.getValue());
             }
         }

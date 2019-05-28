@@ -121,7 +121,7 @@ public class TestShovelReconciler {
     }
 
     @Test
-    public void testRecocile_deleteUnknownShovel() {
+    public void testReconcile_deleteUnknownShovel() {
         final SourceShovelSpec sourceShovelSpec = new SourceShovelSpec("myqueue", "myvhost");
         final DestinationShovelSpec destShovelSpec = new DestinationShovelSpec(
                 Lists.newArrayList(new AddressAndVhost("addr1", "vhost1")),

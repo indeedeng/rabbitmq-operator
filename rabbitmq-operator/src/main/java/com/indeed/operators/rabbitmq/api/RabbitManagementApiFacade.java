@@ -50,7 +50,7 @@ public class RabbitManagementApiFacade {
         return executeCall(() -> api.getClusterName());
     }
 
-    public ResponseBody setClusterName(ClusterName name) {
+    public ResponseBody setClusterName(final ClusterName name) {
         return executeCall(() -> api.setClusterName(name));
     }
 
@@ -346,10 +346,10 @@ public class RabbitManagementApiFacade {
         return executeCall(() -> api.deleteShovel(vhost, name));
     }
 
-    private static <T> T executeCall(Supplier<Call<T>> f) {
-        Call<T> call = f.get();
+    private static <T> T executeCall(final Supplier<Call<T>> f) {
+        final Call<T> call = f.get();
         try {
-            Response<T> response = call.execute() ;
+            final Response<T> response = call.execute();
             if (!response.isSuccessful()) {
                 final String errorMessage;
                 try {
