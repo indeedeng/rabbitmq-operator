@@ -250,7 +250,14 @@ spec:
             requests:
               cpu: 500m
               memory: 256Mi
+          volumeMounts:
+            - name: logging-configuration
+              mountPath: /logging-configuration
       serviceAccountName: rabbitmq-operator
+      volumes:
+        - name: logging-configuration
+          configMap:
+            name: rabbitmq-operator-logger-configuration
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -325,3 +332,22 @@ data:
     # You can add debugging output to this script and reapply this file; allow a few minutes for
     # such changes to take effect.
     exit 1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-operator-logger-configuration
+  namespace: rabbitmqs
+data:
+  # Define additional logging configuration.
+  custom-logger-levels.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+        </Root>
+
+        <!-- Define additional Loggers here. -->
+        <!-- <Logger name="io.fabric8.kubernetes.client" level="trace"/> -->
+        <!-- <Logger name="com.indeed.operators.rabbitmq" level="warn"/> -->
+    </Loggers>

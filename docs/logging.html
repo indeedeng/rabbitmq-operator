@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Logging Configuration</title>
+    </head>
+    <body>
+        <h1>Overview</h1>
+        <p>This project uses <a href="https://logging.apache.org/log4j/2.x/">Log4j 2</a> for logging.  Logging is configured through the <code>rabbitmq-operator/src/main/resources/log4j2-spring.xml</code> file.  This file is compiled in and is accessed from the classpath during operation.</p>
+
+        <p>To avoid needing to recompile to change logging levels, we make use of XInclude and a ConfigMap.  An example of this is included in the provided <code>rabbitmq-operator/examples/rabbitmq_operator.yaml</code> file.</p>
+
+        <p>To pick up changes made to the ConfigMap, follow this procedure:</p>
+        <ol>
+            <li>Edit the ConfigMap.</li>
+            <li>Apply the change via <code>kubectl</code>.</li>
+            <li>Restart the operator.</li>
+        </ol>
+    </body>
+</html>
