@@ -29,11 +29,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -141,6 +144,7 @@ public class TestUserReconciler {
 
         when(managementApiProvider.getApi(cluster)).thenReturn(api);
         when(api.listUsers()).thenReturn(Lists.newArrayList(user));
+        when(api.getPermission("vhost", "username")).thenReturn(new Permission().withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf")));
         when(secretsController.get(rabbitmqUser.getUserSecret().getMetadata().getName(), rabbitmqUser.getUserSecret().getMetadata().getNamespace())).thenReturn(rabbitmqUser.getUserSecret());
         when(secretsController.decodeSecretPayload("password")).thenReturn("password");
         when(passwordConverter.convertPasswordToHash("password")).thenReturn("password-hash");
@@ -156,6 +160,31 @@ public class TestUserReconciler {
         assertEquals("newconf", capturedPermission.getConfigure().pattern());
         assertEquals("newwrite", capturedPermission.getWrite().pattern());
         assertEquals("newread", capturedPermission.getRead().pattern());
+    }
+
+    @Test
+    public void testReconcile_skipUpToDatePermissions() {
+        final RabbitManagementApiFacade api = mock(RabbitManagementApiFacade.class);
+
+        final List<VhostPermissions> newVhostPermissions = Lists.newArrayList(
+                new VhostPermissions("vhost", new VhostOperationPermissions("conf", "write", "read"))
+        );
+
+        final RabbitMQUser rabbitmqUser = generateRabbitMQUser(newVhostPermissions, Collections.emptyList());
+        final RabbitMQCluster cluster = generateCluster(Lists.newArrayList(rabbitmqUser));
+        final User user = new User().withName("username").withPasswordHash("password-hash").withTags("");
+
+        when(managementApiProvider.getApi(cluster)).thenReturn(api);
+        when(api.listUsers()).thenReturn(Lists.newArrayList(user));
+        when(api.getPermission("vhost", "username")).thenReturn(new Permission().withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf")));
+        when(secretsController.get(rabbitmqUser.getUserSecret().getMetadata().getName(), rabbitmqUser.getUserSecret().getMetadata().getNamespace())).thenReturn(rabbitmqUser.getUserSecret());
+        when(secretsController.decodeSecretPayload("password")).thenReturn("password");
+        when(passwordConverter.convertPasswordToHash("password")).thenReturn("password-hash");
+
+        userReconciler.reconcile(cluster);
+
+        verify(api).createUser("username", user);
+        verify(api, never()).createPermission(any(), any(), any(Permission.class));
     }
 
     @Test

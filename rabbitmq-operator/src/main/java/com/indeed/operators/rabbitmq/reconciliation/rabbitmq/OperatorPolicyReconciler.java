@@ -1,8 +1,8 @@
 package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
+import com.indeed.operators.rabbitmq.api.RabbitManagementApiException;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiFacade;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
-import com.indeed.operators.rabbitmq.model.crd.rabbitmq.OperatorPolicySpec;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.rabbitmq.admin.pojo.OperatorPolicy;
 import org.slf4j.Logger;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class OperatorPolicyReconciler {
 
-    private static final Logger log = LoggerFactory.getLogger(PolicyReconciler.class);
+    private static final Logger log = LoggerFactory.getLogger(OperatorPolicyReconciler.class);
 
     private final RabbitManagementApiProvider apiProvider;
 
@@ -28,48 +28,75 @@ public class OperatorPolicyReconciler {
     public void reconcile(final RabbitMQCluster cluster) {
         final RabbitManagementApiFacade apiClient = apiProvider.getApi(cluster);
 
-        deleteObsoleteOperatorPolicies(cluster, apiClient);
+        final Map<String, OperatorPolicy> desiredPolicies = cluster.getOperatorPolicies().stream()
+                .map(operatorPolicySpec -> new OperatorPolicy()
+                        .withName(operatorPolicySpec.getName())
+                        .withVhost(operatorPolicySpec.getVhost())
+                        .withApplyTo(OperatorPolicy.ApplyTo.fromValue(operatorPolicySpec.getApplyTo()))
+                        .withOperatorPolicyDefinition(operatorPolicySpec.getDefinition().asOperatorPolicyDefinition())
+                        .withPattern(Pattern.compile(operatorPolicySpec.getPattern()))
+                        .withPriority(operatorPolicySpec.getPriority()))
+                .collect(Collectors.toMap(OperatorPolicy::getName, policy -> policy));
+        final Map<String, OperatorPolicy> existingPolicies = apiClient.listOperatorPolicies().stream()
+                .collect(Collectors.toMap(OperatorPolicy::getName, policy -> policy));
 
-        for (final OperatorPolicySpec desiredPolicy : cluster.getOperatorPolicies()) {
-            final OperatorPolicy policy = new OperatorPolicy()
-                    .withName(desiredPolicy.getName())
-                    .withVhost(desiredPolicy.getVhost())
-                    .withApplyTo(OperatorPolicy.ApplyTo.fromValue(desiredPolicy.getApplyTo()))
-                    .withOperatorPolicyDefinition(desiredPolicy.getDefinition().asOperatorPolicyDefinition())
-                    .withPattern(Pattern.compile(desiredPolicy.getPattern()))
-                    .withPriority(desiredPolicy.getPriority());
+        deleteObsoletePolicies(desiredPolicies, existingPolicies, apiClient);
+        createMissingPolicies(desiredPolicies, existingPolicies, apiClient);
+        updateExistingPolicies(desiredPolicies, existingPolicies, apiClient);
+    }
 
+    private void createMissingPolicies(final Map<String, OperatorPolicy> desiredPolicies, final Map<String, OperatorPolicy> existingPolicies, final RabbitManagementApiFacade apiClient) {
+        final List<OperatorPolicy> policiesToCreate = desiredPolicies.entrySet().stream()
+                .filter(desiredPolicy -> !existingPolicies.containsKey(desiredPolicy.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+
+        for (final OperatorPolicy policy : policiesToCreate) {
             try {
                 apiClient.createOperatorPolicy(policy.getVhost(), policy.getName(), policy);
-            } catch (final Exception e) {
+            } catch (final RabbitManagementApiException e) {
                 log.error(String.format("Failed to create operator policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
             }
         }
     }
 
-    private void deleteObsoleteOperatorPolicies(final RabbitMQCluster cluster, final RabbitManagementApiFacade apiClient) {
-        final List<OperatorPolicy> existingPolicies;
+    private void updateExistingPolicies(final Map<String, OperatorPolicy> desiredPolicies, final Map<String, OperatorPolicy> existingPolicies, final RabbitManagementApiFacade apiClient) {
+        final List<OperatorPolicy> policiesToUpdate = desiredPolicies.entrySet().stream()
+                .filter(desiredPolicy -> existingPolicies.containsKey(desiredPolicy.getKey()) && !policiesMatch(desiredPolicy.getValue(), existingPolicies.get(desiredPolicy.getKey())))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
 
-        try {
-            existingPolicies = apiClient.listOperatorPolicies();
-        } catch (final Exception e) {
-            throw new RuntimeException("Unable to retrieve existing operator policies, skipping reconciliation of operator policies", e);
-        }
-
-        final Map<String, OperatorPolicy> existingPolicyMap = existingPolicies.stream()
-                .collect(Collectors.toMap(OperatorPolicy::getName, policy -> policy));
-        final Map<String, OperatorPolicySpec> desiredPolicyMap = cluster.getOperatorPolicies().stream()
-                .collect(Collectors.toMap(OperatorPolicySpec::getName, policy -> policy));
-
-        for (final Map.Entry<String, OperatorPolicy> existingPolicy : existingPolicyMap.entrySet()) {
-            final String policyName = existingPolicy.getKey();
-            if (!desiredPolicyMap.containsKey(policyName)) {
-                try {
-                    apiClient.deleteOperatorPolicy(existingPolicy.getValue().getVhost(), policyName);
-                } catch (final Exception e) {
-                    log.error(String.format("Failed to delete operator policy with name %s in vhost %s", policyName, existingPolicy.getValue().getVhost()), e);
-                }
+        for (final OperatorPolicy policy : policiesToUpdate) {
+            try {
+                apiClient.createOperatorPolicy(policy.getVhost(), policy.getName(), policy);
+            } catch (final RabbitManagementApiException e) {
+                log.error(String.format("Failed to update operator policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
             }
         }
+    }
+
+    private void deleteObsoletePolicies(final Map<String, OperatorPolicy> desiredPolicies, final Map<String, OperatorPolicy> existingPolicies, final RabbitManagementApiFacade apiClient) {
+        final List<OperatorPolicy> policiesToDelete = existingPolicies.entrySet().stream()
+                .filter(existingPolicy -> !desiredPolicies.containsKey(existingPolicy.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+
+        for (final OperatorPolicy policy : policiesToDelete) {
+            try {
+                apiClient.deleteOperatorPolicy(policy.getVhost(), policy.getName());
+            } catch (final RabbitManagementApiException e) {
+                log.error(String.format("Failed to delete operator policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
+            }
+        }
+    }
+
+    private boolean policiesMatch(final OperatorPolicy desired, final OperatorPolicy existing) {
+        return existing != null &&
+                desired.getName().equals(existing.getName()) &&
+                desired.getVhost().equals(existing.getVhost()) &&
+                desired.getApplyTo().equals(existing.getApplyTo()) &&
+                desired.getOperatorPolicyDefinition().equals(existing.getOperatorPolicyDefinition()) &&
+                desired.getPattern().pattern().equals(existing.getPattern().pattern()) &&
+                desired.getPriority().equals(existing.getPriority());
     }
 }

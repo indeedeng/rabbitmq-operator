@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
+import com.indeed.operators.rabbitmq.api.RabbitManagementApiException;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiFacade;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiProvider;
 import com.indeed.operators.rabbitmq.controller.SecretsController;
@@ -54,7 +55,7 @@ public class UserReconciler {
             if (!expectedUsers.containsKey(existingUser.getKey())) {
                 try {
                     apiClient.deleteUser(existingUser.getKey());
-                } catch (final Exception e) {
+                } catch (final RabbitManagementApiException e) {
                     log.error(String.format("Failed to delete user %s", existingUser), e);
                 }
             }
@@ -88,26 +89,43 @@ public class UserReconciler {
                     .withPasswordHash(passwordHash)
                     .withTags(Joiner.on(",").join(desiredUser.getTags()));
             apiClient.createUser(user.getName(), user);
-        } catch (final Exception e) {
+        } catch (final RabbitManagementApiException e) {
             log.error(String.format("Failed to create/update user %s", desiredUser.getUsername()), e);
         }
 
-        // todo: only update vhosts if we need to
         updateVhosts(apiClient, desiredUser);
     }
 
     private void updateVhosts(final RabbitManagementApiFacade apiClient, final RabbitMQUser user) {
         for (final VhostPermissions vhost : user.getVhostPermissions()) {
+            final Permission existingPermissions;
+
             try {
-                final Permission permissions = new Permission()
+                existingPermissions = apiClient.getPermission(vhost.getVhostName(), user.getUsername());
+            } catch (final RabbitManagementApiException ex) {
+                log.error(String.format("Failed to retrieve vhost permissions for user %s in vhost %s", user.getUsername(), vhost.getVhostName()), ex);
+                continue;
+            }
+
+            try {
+                final Permission desiredPermissions = new Permission()
                         .withRead(Pattern.compile(vhost.getPermissions().getRead()))
                         .withWrite(Pattern.compile(vhost.getPermissions().getWrite()))
                         .withConfigure(Pattern.compile(vhost.getPermissions().getConfigure()));
 
-                apiClient.createPermission(vhost.getVhostName(), user.getUsername(), permissions);
-            } catch (final Exception ex) {
+                if (!permissionsMatch(desiredPermissions, existingPermissions)) {
+                    apiClient.createPermission(vhost.getVhostName(), user.getUsername(), desiredPermissions);
+                }
+            } catch (final RabbitManagementApiException ex) {
                 log.error(String.format("Failed to set vhost permissions for user %s in vhost %s", user.getUsername(), vhost.getVhostName()), ex);
             }
         }
+    }
+
+    private boolean permissionsMatch(final Permission desired, final Permission existing) {
+        return existing != null &&
+                desired.getRead().pattern().equals(existing.getRead().pattern()) &&
+                desired.getWrite().pattern().equals(existing.getWrite().pattern()) &&
+                desired.getConfigure().pattern().equals(existing.getConfigure().pattern());
     }
 }
