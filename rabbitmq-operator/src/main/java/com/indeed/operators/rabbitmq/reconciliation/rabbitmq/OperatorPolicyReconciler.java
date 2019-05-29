@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class OperatorPolicyReconciler {
 
-    private static final Logger log = LoggerFactory.getLogger(PolicyReconciler.class);
+    private static final Logger log = LoggerFactory.getLogger(OperatorPolicyReconciler.class);
 
     private final RabbitManagementApiProvider apiProvider;
 
@@ -55,7 +55,7 @@ public class OperatorPolicyReconciler {
             try {
                 apiClient.createOperatorPolicy(policy.getVhost(), policy.getName(), policy);
             } catch (final RabbitManagementApiException e) {
-                log.error(String.format("Failed to create policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
+                log.error(String.format("Failed to create operator policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
             }
         }
     }
@@ -70,7 +70,7 @@ public class OperatorPolicyReconciler {
             try {
                 apiClient.createOperatorPolicy(policy.getVhost(), policy.getName(), policy);
             } catch (final RabbitManagementApiException e) {
-                log.error(String.format("Failed to update policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
+                log.error(String.format("Failed to update operator policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
             }
         }
     }
@@ -85,7 +85,7 @@ public class OperatorPolicyReconciler {
             try {
                 apiClient.deleteOperatorPolicy(policy.getVhost(), policy.getName());
             } catch (final RabbitManagementApiException e) {
-                log.error(String.format("Failed to delete policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
+                log.error(String.format("Failed to delete operator policy with name %s in vhost %s", policy.getName(), policy.getVhost()), e);
             }
         }
     }
