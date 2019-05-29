@@ -36,7 +36,7 @@ public class RabbitConfig {
     public RabbitMQSecrets rabbitSecrets(
             final Function<Integer, String> randomStringGenerator
     ) {
-        return new RabbitMQSecrets(randomStringGenerator);
+        return new RabbitMQSecrets(randomStringGenerator, (str) -> Base64.getEncoder().encodeToString(str.getBytes()));
     }
 
     @Bean

@@ -1,5 +1,6 @@
 package com.indeed.operators.rabbitmq.config;
 
+import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.executor.ClusterAwareExecutor;
 import com.indeed.operators.rabbitmq.reconciliation.lock.NamedSemaphores;
 import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
@@ -58,9 +59,10 @@ public class AppConfig {
             final RabbitMQContainers rabbitMQContainers,
             final RabbitMQPods rabbitMQPods,
             final RabbitMQSecrets rabbitMQSecrets,
-            final RabbitMQServices rabbitMQServices
+            final RabbitMQServices rabbitMQServices,
+            final SecretsController secretsController
     ) {
-        return new RabbitMQClusterFactory(rabbitMQContainers, rabbitMQPods, rabbitMQSecrets, rabbitMQServices);
+        return new RabbitMQClusterFactory(rabbitMQContainers, rabbitMQPods, rabbitMQSecrets, rabbitMQServices, secretsController);
     }
 
     @Bean
