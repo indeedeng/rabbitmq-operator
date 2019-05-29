@@ -16,11 +16,14 @@ import static com.indeed.operators.rabbitmq.Constants.DEFAULT_USERNAME;
 public class RabbitMQSecrets {
 
     private final Function<Integer, String> randomStringGenerator;
+    private final Function<String, String> secretDataEncoder;
 
     public RabbitMQSecrets(
-            final Function<Integer, String> randomStringGenerator
+            final Function<Integer, String> randomStringGenerator,
+            final Function<String, String> secretDataEncoder
     ) {
         this.randomStringGenerator = Preconditions.checkNotNull(randomStringGenerator);
+        this.secretDataEncoder = Preconditions.checkNotNull(secretDataEncoder);
     }
 
     public Secret createClusterSecret(final RabbitMQCustomResource rabbit) {
@@ -29,8 +32,8 @@ public class RabbitMQSecrets {
         final String password = randomStringGenerator.apply(30);
 
         return new SecretBuilder()
-                .addToStringData(Constants.Secrets.USERNAME_KEY, DEFAULT_USERNAME)
-                .addToStringData(Constants.Secrets.PASSWORD_KEY, password)
+                .addToData(Constants.Secrets.USERNAME_KEY, secretDataEncoder.apply(DEFAULT_USERNAME))
+                .addToData(Constants.Secrets.PASSWORD_KEY, secretDataEncoder.apply(password))
                 .withNewMetadata()
                     .withName(getClusterSecretName(clusterName))
                     .withNamespace(rabbit.getMetadata().getNamespace())
@@ -60,8 +63,8 @@ public class RabbitMQSecrets {
         final String password = randomStringGenerator.apply(30);
 
         return new SecretBuilder()
-                .addToStringData(Constants.Secrets.USERNAME_KEY, username)
-                .addToStringData(Constants.Secrets.PASSWORD_KEY, password)
+                .addToData(Constants.Secrets.USERNAME_KEY, secretDataEncoder.apply(username))
+                .addToData(Constants.Secrets.PASSWORD_KEY, secretDataEncoder.apply(password))
                 .withNewMetadata()
                 .withName(getUserSecretName(username, clusterName))
                 .withNamespace(rabbit.getMetadata().getNamespace())
@@ -89,7 +92,7 @@ public class RabbitMQSecrets {
         final String erlangCookie = randomStringGenerator.apply(50);
 
         return new SecretBuilder()
-                .addToStringData(Constants.Secrets.ERLANG_COOKIE_KEY, erlangCookie)
+                .addToData(Constants.Secrets.ERLANG_COOKIE_KEY, secretDataEncoder.apply(erlangCookie))
                 .withNewMetadata()
                 .withName(getErlangCookieSecretName(clusterName))
                 .withNamespace(rabbit.getMetadata().getNamespace())

@@ -88,7 +88,6 @@ public class TestUserReconciler {
 
         when(managementApiProvider.getApi(cluster)).thenReturn(api);
         when(api.listUsers()).thenReturn(Lists.newArrayList(user));
-        when(secretsController.get(rabbitmqUser.getUserSecret().getMetadata().getName(), rabbitmqUser.getUserSecret().getMetadata().getNamespace())).thenReturn(rabbitmqUser.getUserSecret());
         when(secretsController.decodeSecretPayload("password")).thenReturn("password");
         when(passwordConverter.convertPasswordToHash("password")).thenReturn("new-password-hash");
 
@@ -113,15 +112,11 @@ public class TestUserReconciler {
 
         when(managementApiProvider.getApi(cluster)).thenReturn(api);
         when(api.listUsers()).thenReturn(Lists.newArrayList(user));
-        when(secretsController.get(rabbitmqUser.getUserSecret().getMetadata().getName(), rabbitmqUser.getUserSecret().getMetadata().getNamespace())).thenReturn(rabbitmqUser.getUserSecret());
-        when(secretsController.decodeSecretPayload("password")).thenReturn("password");
-        when(passwordConverter.convertPasswordToHash("password")).thenReturn("password-hash");
 
         userReconciler.reconcile(cluster);
 
         final ArgumentCaptor<Permission> permissionCaptor = ArgumentCaptor.forClass(Permission.class);
 
-        verify(api).createUser("username", user);
         verify(api).createPermission(eq("newVhost"), eq("username"), permissionCaptor.capture());
 
         final Permission capturedPermission = permissionCaptor.getValue();
@@ -144,16 +139,12 @@ public class TestUserReconciler {
 
         when(managementApiProvider.getApi(cluster)).thenReturn(api);
         when(api.listUsers()).thenReturn(Lists.newArrayList(user));
-        when(api.getPermission("vhost", "username")).thenReturn(new Permission().withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf")));
-        when(secretsController.get(rabbitmqUser.getUserSecret().getMetadata().getName(), rabbitmqUser.getUserSecret().getMetadata().getNamespace())).thenReturn(rabbitmqUser.getUserSecret());
-        when(secretsController.decodeSecretPayload("password")).thenReturn("password");
-        when(passwordConverter.convertPasswordToHash("password")).thenReturn("password-hash");
+        when(api.listUserPermissions("username")).thenReturn(Lists.newArrayList(new Permission().withVhost("vhost").withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf"))));
 
         userReconciler.reconcile(cluster);
 
         final ArgumentCaptor<Permission> permissionCaptor = ArgumentCaptor.forClass(Permission.class);
 
-        verify(api).createUser("username", user);
         verify(api).createPermission(eq("vhost"), eq("username"), permissionCaptor.capture());
 
         final Permission capturedPermission = permissionCaptor.getValue();
@@ -176,14 +167,10 @@ public class TestUserReconciler {
 
         when(managementApiProvider.getApi(cluster)).thenReturn(api);
         when(api.listUsers()).thenReturn(Lists.newArrayList(user));
-        when(api.getPermission("vhost", "username")).thenReturn(new Permission().withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf")));
-        when(secretsController.get(rabbitmqUser.getUserSecret().getMetadata().getName(), rabbitmqUser.getUserSecret().getMetadata().getNamespace())).thenReturn(rabbitmqUser.getUserSecret());
-        when(secretsController.decodeSecretPayload("password")).thenReturn("password");
-        when(passwordConverter.convertPasswordToHash("password")).thenReturn("password-hash");
+        when(api.listUserPermissions("username")).thenReturn(Lists.newArrayList(new Permission().withVhost("vhost").withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf"))));
 
         userReconciler.reconcile(cluster);
 
-        verify(api).createUser("username", user);
         verify(api, never()).createPermission(any(), any(), any(Permission.class));
     }
 

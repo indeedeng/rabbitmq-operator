@@ -1,10 +1,11 @@
 package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
+import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.model.Labels;
-import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceSpec;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQStorageResources;
+import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQUser;
 import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
 import com.indeed.operators.rabbitmq.resources.RabbitMQPods;
@@ -33,17 +34,20 @@ public class RabbitMQClusterFactory {
     private final RabbitMQPods rabbitMQPods;
     private final RabbitMQSecrets rabbitMQSecrets;
     private final RabbitMQServices rabbitMQServices;
+    private final SecretsController secretsController;
 
     public RabbitMQClusterFactory(
             final RabbitMQContainers rabbitMQContainers,
             final RabbitMQPods rabbitMQPods,
             final RabbitMQSecrets rabbitMQSecrets,
-            final RabbitMQServices rabbitMQServices
+            final RabbitMQServices rabbitMQServices,
+            final SecretsController secretsController
     ) {
         this.rabbitMQContainers = rabbitMQContainers;
         this.rabbitMQPods = rabbitMQPods;
         this.rabbitMQSecrets = rabbitMQSecrets;
         this.rabbitMQServices = rabbitMQServices;
+        this.secretsController = secretsController;
     }
 
     public RabbitMQCluster fromCustomResource(final RabbitMQCustomResource resource) {
@@ -51,8 +55,8 @@ public class RabbitMQClusterFactory {
         final String namespace = resource.getMetadata().getNamespace();
         final RabbitMQCustomResourceSpec spec = resource.getSpec();
 
-        final Secret adminSecret = rabbitMQSecrets.createClusterSecret(resource);
-        final Secret erlangCookieSecret = rabbitMQSecrets.createErlangCookieSecret(resource);
+        final Secret adminSecret = getOrGenerateAdminSecret(resource);
+        final Secret erlangCookieSecret = getOrGenerateErlangSecret(resource);
         final Service mainService = rabbitMQServices.buildService(namespace, resource);
         final Service discoveryService = rabbitMQServices.buildDiscoveryService(namespace, resource);
 
@@ -91,6 +95,18 @@ public class RabbitMQClusterFactory {
                 .withPolicies(spec.getClusterSpec().getPolicies())
                 .withOperatorPolicies(spec.getClusterSpec().getOperatorPolicies())
                 .build();
+    }
+
+    private Secret getOrGenerateErlangSecret(final RabbitMQCustomResource resource) {
+        final Secret existingErlangSecret = secretsController.get(RabbitMQSecrets.getErlangCookieSecretName(resource.getName()), resource.getMetadata().getNamespace());
+
+        return existingErlangSecret != null ? existingErlangSecret : rabbitMQSecrets.createErlangCookieSecret(resource);
+    }
+
+    private Secret getOrGenerateAdminSecret(final RabbitMQCustomResource resource) {
+        final Secret existingAdminSecret = secretsController.get(RabbitMQSecrets.getClusterSecretName(resource.getName()), resource.getMetadata().getNamespace());
+
+        return existingAdminSecret != null ? existingAdminSecret : rabbitMQSecrets.createClusterSecret(resource);
     }
 
     private StatefulSet buildStatefulSet(
@@ -193,21 +209,25 @@ public class RabbitMQClusterFactory {
 
     private List<RabbitMQUser> buildUsers(final RabbitMQCustomResource resource) {
         return resource.getSpec().getClusterSpec().getUsers().stream()
-                .map(user -> new RabbitMQUser(
-                        user.getUsername(),
-                        rabbitMQSecrets.createUserSecret(user.getUsername(), resource), // todo: retrieve the secret if the user already exists
-                        resource.getMetadata(),
-                        new OwnerReference(
-                                resource.getApiVersion(),
-                                true,
-                                true,
-                                resource.getKind(),
-                                resource.getName(),
-                                resource.getMetadata().getUid()
-                        ),
-                        user.getVhosts(),
-                        user.getTags()
-                ))
+                .map(user -> {
+                    final Secret maybeExistingUserSecret = secretsController.get(RabbitMQSecrets.getUserSecretName(user.getUsername(), resource.getName()), resource.getMetadata().getNamespace());
+
+                    return new RabbitMQUser(
+                            user.getUsername(),
+                            maybeExistingUserSecret != null ? maybeExistingUserSecret : rabbitMQSecrets.createUserSecret(user.getUsername(), resource),
+                            resource.getMetadata(),
+                            new OwnerReference(
+                                    resource.getApiVersion(),
+                                    true,
+                                    true,
+                                    resource.getKind(),
+                                    resource.getName(),
+                                    resource.getMetadata().getUid()
+                            ),
+                            user.getVhosts(),
+                            user.getTags()
+                    );
+                })
                 .collect(Collectors.toList());
     }
 }

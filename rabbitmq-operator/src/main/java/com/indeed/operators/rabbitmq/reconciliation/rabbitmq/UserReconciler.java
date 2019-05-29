@@ -2,6 +2,7 @@ package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
 import com.indeed.operators.rabbitmq.api.RabbitManagementApiException;
@@ -11,14 +12,15 @@ import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.VhostPermissions;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQUser;
-import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
 import com.indeed.rabbitmq.admin.pojo.Permission;
 import com.indeed.rabbitmq.admin.pojo.User;
 import io.fabric8.kubernetes.api.model.Secret;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -42,66 +44,77 @@ public class UserReconciler {
     }
 
     public void reconcile(final RabbitMQCluster cluster) {
-        final Map<String, RabbitMQUser> expectedUsers = cluster.getUsers().stream().collect(Collectors.toMap(RabbitMQUser::getUsername, user -> user));
         final RabbitManagementApiFacade apiClient = managementApiProvider.getApi(cluster);
 
+        final Map<String, RabbitMQUser> desiredUsers = cluster.getUsers().stream().collect(Collectors.toMap(RabbitMQUser::getUsername, user -> user));
         final Map<String, User> existingUsers = apiClient.listUsers()
                 .stream()
                 .filter(user -> !PERMANENT_USERS.contains(user.getName()))
                 .collect(Collectors.toMap(User::getName, user -> user));
 
+        deleteObsoleteUsers(desiredUsers, existingUsers, apiClient);
+        createMissingUsers(desiredUsers, existingUsers, apiClient);
+        updateExistingUser(desiredUsers, existingUsers, apiClient);
 
-        for (final Map.Entry<String, User> existingUser : existingUsers.entrySet()) {
-            if (!expectedUsers.containsKey(existingUser.getKey())) {
-                try {
-                    apiClient.deleteUser(existingUser.getKey());
-                } catch (final RabbitManagementApiException e) {
-                    log.error(String.format("Failed to delete user %s", existingUser), e);
-                }
-            }
-        }
+        desiredUsers.values().forEach(user -> updateVhosts(apiClient, user));
+    }
 
-        for (final Map.Entry<String, RabbitMQUser> user : expectedUsers.entrySet()) {
-            if (!existingUsers.containsKey(user.getKey())) {
-                createUser(apiClient, user.getValue());
-            } else if (!PERMANENT_USERS.contains(user.getKey())) {
-                updateExistingUser(apiClient, user.getValue());
-            }
+    private void createMissingUsers(final Map<String, RabbitMQUser> desiredUsers, final Map<String, User> existingUsers, final RabbitManagementApiFacade apiClient) {
+        final List<RabbitMQUser> usersToCreate = desiredUsers.entrySet().stream()
+                .filter(desiredUser -> !existingUsers.containsKey(desiredUser.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+
+        for (final RabbitMQUser user : usersToCreate) {
+            final Secret createdSecret = secretsController.createOrUpdate(user.getUserSecret());
+
+            createOrUpdateUser(apiClient, user, passwordConverter.convertPasswordToHash(secretsController.decodeSecretPayload(createdSecret.getData().get(Constants.Secrets.PASSWORD_KEY))));
         }
     }
 
-    private void createUser(final RabbitManagementApiFacade apiClient, final RabbitMQUser desiredUser) {
-        final Secret createdSecret = secretsController.createOrUpdate(desiredUser.getUserSecret());
+    private void updateExistingUser(final Map<String, RabbitMQUser> desiredUsers, final Map<String, User> existingUsers, final RabbitManagementApiFacade apiClient) {
+        final List<RabbitMQUser> usersToUpdate = desiredUsers.entrySet().stream()
+                .filter(desiredUser -> existingUsers.containsKey(desiredUser.getKey()) && !usersMatch(desiredUser.getValue(), existingUsers.get(desiredUser.getKey())))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
 
-        createOrUpdateUser(apiClient, desiredUser, passwordConverter.convertPasswordToHash(secretsController.decodeSecretPayload(createdSecret.getData().get(Constants.Secrets.PASSWORD_KEY))));
+        for (final RabbitMQUser user : usersToUpdate) {
+            createOrUpdateUser(apiClient, user, passwordConverter.convertPasswordToHash(secretsController.decodeSecretPayload(user.getUserSecret().getData().get(Constants.Secrets.PASSWORD_KEY))));
+        }
     }
 
-    private void updateExistingUser(final RabbitManagementApiFacade apiClient, final RabbitMQUser desiredUser) {
-        final Secret userSecret = secretsController.get(RabbitMQSecrets.getUserSecretName(desiredUser.getUsername(), desiredUser.getClusterMetadata().getName()), desiredUser.getClusterMetadata().getNamespace());
+    private void deleteObsoleteUsers(final Map<String, RabbitMQUser> desiredUsers, final Map<String, User> existingUsers, final RabbitManagementApiFacade apiClient) {
+        final List<User> usersToDelete = existingUsers.entrySet().stream()
+                .filter(existingUser -> !desiredUsers.containsKey(existingUser.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
 
-        createOrUpdateUser(apiClient, desiredUser, passwordConverter.convertPasswordToHash(secretsController.decodeSecretPayload(userSecret.getData().get(Constants.Secrets.PASSWORD_KEY))));
+        for (final User user : usersToDelete) {
+            try {
+                apiClient.deleteUser(user.getName());
+            } catch (final RabbitManagementApiException ex) {
+                log.error("Failed to delete user with name {}", user.getName(), ex);
+            }
+        }
     }
 
     private void createOrUpdateUser(final RabbitManagementApiFacade apiClient, final RabbitMQUser desiredUser, final String passwordHash) {
-        try {
-            final User user = new User()
-                    .withName(desiredUser.getUsername())
-                    .withPasswordHash(passwordHash)
-                    .withTags(Joiner.on(",").join(desiredUser.getTags()));
-            apiClient.createUser(user.getName(), user);
-        } catch (final RabbitManagementApiException e) {
-            log.error(String.format("Failed to create/update user %s", desiredUser.getUsername()), e);
-        }
+        final User user = new User()
+                .withName(desiredUser.getUsername())
+                .withPasswordHash(passwordHash)
+                .withTags(Joiner.on(",").join(desiredUser.getTags()));
 
-        updateVhosts(apiClient, desiredUser);
+        apiClient.createUser(user.getName(), user);
     }
 
     private void updateVhosts(final RabbitManagementApiFacade apiClient, final RabbitMQUser user) {
         for (final VhostPermissions vhost : user.getVhostPermissions()) {
-            final Permission existingPermissions;
+            final Optional<Permission> maybeExistingPermission;
 
             try {
-                existingPermissions = apiClient.getPermission(vhost.getVhostName(), user.getUsername());
+                maybeExistingPermission = apiClient.listUserPermissions(user.getUsername()).stream()
+                        .filter(permission -> permission.getVhost().equals(vhost.getVhostName()))
+                        .findFirst();
             } catch (final RabbitManagementApiException ex) {
                 log.error(String.format("Failed to retrieve vhost permissions for user %s in vhost %s", user.getUsername(), vhost.getVhostName()), ex);
                 continue;
@@ -113,13 +126,19 @@ public class UserReconciler {
                         .withWrite(Pattern.compile(vhost.getPermissions().getWrite()))
                         .withConfigure(Pattern.compile(vhost.getPermissions().getConfigure()));
 
-                if (!permissionsMatch(desiredPermissions, existingPermissions)) {
+                if (!maybeExistingPermission.isPresent() || !permissionsMatch(desiredPermissions, maybeExistingPermission.get())) {
                     apiClient.createPermission(vhost.getVhostName(), user.getUsername(), desiredPermissions);
                 }
             } catch (final RabbitManagementApiException ex) {
                 log.error(String.format("Failed to set vhost permissions for user %s in vhost %s", user.getUsername(), vhost.getVhostName()), ex);
             }
         }
+    }
+
+    private boolean usersMatch(final RabbitMQUser desired, final User existing) {
+        return existing != null &&
+                desired.getUsername().equals(existing.getName()) &&
+                Sets.newHashSet(desired.getTags()).equals(Sets.newHashSet(existing.getTags().split(",")));
     }
 
     private boolean permissionsMatch(final Permission desired, final Permission existing) {
