@@ -139,7 +139,7 @@ public class TestUserReconciler {
 
         when(managementApiProvider.getApi(cluster)).thenReturn(api);
         when(api.listUsers()).thenReturn(Lists.newArrayList(user));
-        when(api.getPermission("vhost", "username")).thenReturn(new Permission().withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf")));
+        when(api.listUserPermissions("username")).thenReturn(Lists.newArrayList(new Permission().withVhost("vhost").withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf"))));
 
         userReconciler.reconcile(cluster);
 
@@ -167,7 +167,7 @@ public class TestUserReconciler {
 
         when(managementApiProvider.getApi(cluster)).thenReturn(api);
         when(api.listUsers()).thenReturn(Lists.newArrayList(user));
-        when(api.getPermission("vhost", "username")).thenReturn(new Permission().withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf")));
+        when(api.listUserPermissions("username")).thenReturn(Lists.newArrayList(new Permission().withVhost("vhost").withRead(Pattern.compile("read")).withWrite(Pattern.compile("write")).withConfigure(Pattern.compile("conf"))));
 
         userReconciler.reconcile(cluster);
 

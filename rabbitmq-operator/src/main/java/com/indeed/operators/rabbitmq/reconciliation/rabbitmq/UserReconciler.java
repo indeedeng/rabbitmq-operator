@@ -2,7 +2,6 @@ package com.indeed.operators.rabbitmq.reconciliation.rabbitmq;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.indeed.operators.rabbitmq.Constants;
 import com.indeed.operators.rabbitmq.api.RabbitMQPasswordConverter;
@@ -13,7 +12,6 @@ import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.VhostPermissions;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQUser;
-import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
 import com.indeed.rabbitmq.admin.pojo.Permission;
 import com.indeed.rabbitmq.admin.pojo.User;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -22,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -110,10 +109,12 @@ public class UserReconciler {
 
     private void updateVhosts(final RabbitManagementApiFacade apiClient, final RabbitMQUser user) {
         for (final VhostPermissions vhost : user.getVhostPermissions()) {
-            final Permission existingPermissions;
+            final Optional<Permission> maybeExistingPermission;
 
             try {
-                existingPermissions = apiClient.getPermission(vhost.getVhostName(), user.getUsername());
+                maybeExistingPermission = apiClient.listUserPermissions(user.getUsername()).stream()
+                        .filter(permission -> permission.getVhost().equals(vhost.getVhostName()))
+                        .findFirst();
             } catch (final RabbitManagementApiException ex) {
                 log.error(String.format("Failed to retrieve vhost permissions for user %s in vhost %s", user.getUsername(), vhost.getVhostName()), ex);
                 continue;
@@ -125,7 +126,7 @@ public class UserReconciler {
                         .withWrite(Pattern.compile(vhost.getPermissions().getWrite()))
                         .withConfigure(Pattern.compile(vhost.getPermissions().getConfigure()));
 
-                if (!permissionsMatch(desiredPermissions, existingPermissions)) {
+                if (!maybeExistingPermission.isPresent() || !permissionsMatch(desiredPermissions, maybeExistingPermission.get())) {
                     apiClient.createPermission(vhost.getVhostName(), user.getUsername(), desiredPermissions);
                 }
             } catch (final RabbitManagementApiException ex) {
