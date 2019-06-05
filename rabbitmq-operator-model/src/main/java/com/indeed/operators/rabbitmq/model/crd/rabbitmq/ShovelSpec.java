@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import io.sundr.builder.annotations.Buildable;
 
 @Buildable(
@@ -25,9 +27,11 @@ public class ShovelSpec {
             @JsonProperty("source") final SourceShovelSpec source,
             @JsonProperty("destination") final DestinationShovelSpec destination
     ) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "Shovel 'name' cannot be empty or null");
+
         this.name = name;
-        this.source = source;
-        this.destination = destination;
+        this.source = Preconditions.checkNotNull(source, "Shovel 'source' cannot be null");
+        this.destination = Preconditions.checkNotNull(destination, "Shovel 'destination' cannot be null");
     }
 
     public String getName() {

@@ -1,13 +1,7 @@
 package com.indeed.operators.rabbitmq.config;
 
-import com.indeed.operators.rabbitmq.controller.SecretsController;
 import com.indeed.operators.rabbitmq.executor.ClusterAwareExecutor;
 import com.indeed.operators.rabbitmq.reconciliation.lock.NamedSemaphores;
-import com.indeed.operators.rabbitmq.reconciliation.rabbitmq.RabbitMQClusterFactory;
-import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
-import com.indeed.operators.rabbitmq.resources.RabbitMQPods;
-import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
-import com.indeed.operators.rabbitmq.resources.RabbitMQServices;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import okhttp3.OkHttpClient;
@@ -52,17 +46,6 @@ public class AppConfig {
     @Bean
     public String namespace(final KubernetesClient client) {
         return client.getNamespace();
-    }
-
-    @Bean
-    public RabbitMQClusterFactory clusterFactory(
-            final RabbitMQContainers rabbitMQContainers,
-            final RabbitMQPods rabbitMQPods,
-            final RabbitMQSecrets rabbitMQSecrets,
-            final RabbitMQServices rabbitMQServices,
-            final SecretsController secretsController
-    ) {
-        return new RabbitMQClusterFactory(rabbitMQContainers, rabbitMQPods, rabbitMQSecrets, rabbitMQServices, secretsController);
     }
 
     @Bean

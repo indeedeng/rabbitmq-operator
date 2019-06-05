@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 @JsonPropertyOrder({"queue", "vhost"})
 @JsonDeserialize(using = JsonDeserializer.None.class)
@@ -18,6 +20,8 @@ public class SourceShovelSpec {
             @JsonProperty("queue") final String queue,
             @JsonProperty("vhost") final String vhost
     ) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(queue), "Shovel source 'queue' must not be empty or null");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(queue), "Shovel source 'vhost' must not be empty or null");
         this.queue = queue;
         this.vhost = vhost;
     }

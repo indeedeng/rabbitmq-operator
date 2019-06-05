@@ -5,9 +5,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import io.sundr.builder.annotations.Buildable;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -30,9 +33,11 @@ public class UserSpec {
             @JsonProperty("vhosts") final List<VhostPermissions> vhosts,
             @JsonProperty("tags") final List<String> tags
     ) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(username), "User 'username' cannot be empty or null");
+
         this.username = username;
-        this.vhosts = ImmutableList.copyOf(vhosts);
-        this.tags = ImmutableList.copyOf(tags);
+        this.vhosts = vhosts == null ? Collections.emptyList() : ImmutableList.copyOf(vhosts);
+        this.tags = tags == null ? Collections.emptyList() : ImmutableList.copyOf(tags);
     }
 
     public String getUsername() {

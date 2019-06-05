@@ -3,6 +3,8 @@ package com.indeed.operators.rabbitmq.model.crd.rabbitmq;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -18,6 +20,9 @@ public class AddressAndVhost {
             @JsonProperty("address") final String address,
             @JsonProperty("vhost") final String vhost
     ) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(address), "'address' cannot be null");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(address), "'vhost' cannot be null");
+
         this.address = address;
         this.vhost = vhost;
     }

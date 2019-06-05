@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.indeed.operators.rabbitmq.controller.crd.RabbitMQResourceController;
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResource;
 import com.indeed.operators.rabbitmq.reconciliation.ClusterReconciliationOrchestrator;
+import com.indeed.operators.rabbitmq.reconciliation.RabbitClusterConfigurationException;
 import com.indeed.operators.rabbitmq.reconciliation.RabbitMQClusterReconciler;
 import com.indeed.operators.rabbitmq.reconciliation.Reconciliation;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -11,7 +12,6 @@ import io.fabric8.kubernetes.client.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
 
 public class RabbitMQEventWatcher implements Watcher<RabbitMQCustomResource> {
@@ -58,6 +58,8 @@ public class RabbitMQEventWatcher implements Watcher<RabbitMQCustomResource> {
                 reconciler.reconcile(reconciliation);
             } catch (final InterruptedException e) {
                 log.error("Interrupted during reconciliation", e);
+            } catch (final RabbitClusterConfigurationException e) {
+                log.error("Rabbit cluster configuration is invalid", e);
             }
         });
     }

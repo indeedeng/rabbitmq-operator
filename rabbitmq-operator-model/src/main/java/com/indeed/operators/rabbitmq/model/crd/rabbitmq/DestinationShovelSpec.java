@@ -3,6 +3,8 @@ package com.indeed.operators.rabbitmq.model.crd.rabbitmq;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import java.util.List;
 
@@ -19,6 +21,10 @@ public class DestinationShovelSpec {
             @JsonProperty("secretName") final String secretName,
             @JsonProperty("secretNamespace") final String secretNamespace
     ) {
+        Preconditions.checkArgument(addresses != null && !addresses.isEmpty(), "Shovel destination 'addresses' cannot be empty or null");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(secretName), "Shovel destination 'secretName' cannot be empty or null");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(secretNamespace), "Shovel destination 'secretNamespace' cannot be empty or null");
+
         this.addresses = addresses;
         this.secretName = secretName;
         this.secretNamespace = secretNamespace;

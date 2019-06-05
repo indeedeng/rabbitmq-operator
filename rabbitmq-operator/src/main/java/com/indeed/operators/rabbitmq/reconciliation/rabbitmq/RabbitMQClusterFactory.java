@@ -7,6 +7,8 @@ import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQCustomResourceSp
 import com.indeed.operators.rabbitmq.model.crd.rabbitmq.RabbitMQStorageResources;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQCluster;
 import com.indeed.operators.rabbitmq.model.rabbitmq.RabbitMQUser;
+import com.indeed.operators.rabbitmq.reconciliation.RabbitClusterConfigurationException;
+import com.indeed.operators.rabbitmq.reconciliation.validators.RabbitClusterValidator;
 import com.indeed.operators.rabbitmq.resources.RabbitMQContainers;
 import com.indeed.operators.rabbitmq.resources.RabbitMQPods;
 import com.indeed.operators.rabbitmq.resources.RabbitMQSecrets;
@@ -30,6 +32,7 @@ import static com.indeed.operators.rabbitmq.Constants.RABBITMQ_STORAGE_NAME;
 
 public class RabbitMQClusterFactory {
 
+    private final List<RabbitClusterValidator> clusterValidators;
     private final RabbitMQContainers rabbitMQContainers;
     private final RabbitMQPods rabbitMQPods;
     private final RabbitMQSecrets rabbitMQSecrets;
@@ -37,12 +40,14 @@ public class RabbitMQClusterFactory {
     private final SecretsController secretsController;
 
     public RabbitMQClusterFactory(
+            final List<RabbitClusterValidator> clusterValidators,
             final RabbitMQContainers rabbitMQContainers,
             final RabbitMQPods rabbitMQPods,
             final RabbitMQSecrets rabbitMQSecrets,
             final RabbitMQServices rabbitMQServices,
             final SecretsController secretsController
     ) {
+        this.clusterValidators = clusterValidators;
         this.rabbitMQContainers = rabbitMQContainers;
         this.rabbitMQPods = rabbitMQPods;
         this.rabbitMQSecrets = rabbitMQSecrets;
@@ -50,10 +55,19 @@ public class RabbitMQClusterFactory {
         this.secretsController = secretsController;
     }
 
-    public RabbitMQCluster fromCustomResource(final RabbitMQCustomResource resource) {
+    public RabbitMQCluster fromCustomResource(final RabbitMQCustomResource resource) throws RabbitClusterConfigurationException {
         final String clusterName = resource.getName();
         final String namespace = resource.getMetadata().getNamespace();
         final RabbitMQCustomResourceSpec spec = resource.getSpec();
+
+        final List<String> errors = clusterValidators.stream()
+                .map(validator -> validator.validate(spec.getClusterSpec()))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        if (!errors.isEmpty()) {
+            throw new RabbitClusterConfigurationException(errors);
+        }
 
         final Secret adminSecret = getOrGenerateAdminSecret(resource);
         final Secret erlangCookieSecret = getOrGenerateErlangSecret(resource);

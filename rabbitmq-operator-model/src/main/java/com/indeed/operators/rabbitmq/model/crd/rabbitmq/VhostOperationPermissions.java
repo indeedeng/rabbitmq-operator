@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 @JsonDeserialize(using = JsonDeserializer.None.class)
 public class VhostOperationPermissions {
@@ -20,6 +22,9 @@ public class VhostOperationPermissions {
             @JsonProperty("write") final String write,
             @JsonProperty("read") final String read
     ) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(configure), "vhost 'configure' permissions cannot be null");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(write), "vhost 'write' permissions cannot be null");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(read), "vhost 'read' permissions cannot be null");
         this.configure = configure;
         this.write = write;
         this.read = read;
