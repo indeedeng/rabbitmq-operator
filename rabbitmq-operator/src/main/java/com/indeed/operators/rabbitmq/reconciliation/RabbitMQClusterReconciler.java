@@ -66,7 +66,7 @@ public class RabbitMQClusterReconciler {
         this.operatorPolicyReconciler = operatorPolicyReconciler;
     }
 
-    public void reconcile(final Reconciliation reconciliation) throws InterruptedException {
+    public void reconcile(final Reconciliation reconciliation) throws InterruptedException, RabbitClusterConfigurationException {
         final RabbitMQCustomResource resource = controller.get(reconciliation.getResourceName(), reconciliation.getNamespace());
 
         if (resource == null) {

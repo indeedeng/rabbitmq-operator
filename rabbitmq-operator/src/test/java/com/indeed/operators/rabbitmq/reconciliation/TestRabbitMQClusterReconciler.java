@@ -83,7 +83,7 @@ public class TestRabbitMQClusterReconciler {
     }
 
     @Test
-    void shouldSkipReconciliation() throws InterruptedException {
+    void shouldSkipReconciliation() throws InterruptedException, RabbitClusterConfigurationException {
         final Reconciliation rec = new Reconciliation("resourceName", "clusterName", "namespace", "type");
         final Map<String, String> labels = Maps.newHashMap();
         labels.put(Labels.Indeed.LOCKED_BY, "somevalue");
@@ -107,7 +107,7 @@ public class TestRabbitMQClusterReconciler {
     }
 
     @Test
-    void shouldSkipReconciliationNullResource() throws InterruptedException {
+    void shouldSkipReconciliationNullResource() throws InterruptedException, RabbitClusterConfigurationException {
         final Reconciliation rec = new Reconciliation("resourceName", "clusterName", "namespace", "type");
 
         when(controller.get(rec.getResourceName(), rec.getNamespace())).thenReturn(null);
@@ -121,7 +121,7 @@ public class TestRabbitMQClusterReconciler {
     }
 
     @Test
-    void scalingDownDeletesOrphanPVCs() throws InterruptedException {
+    void scalingDownDeletesOrphanPVCs() throws InterruptedException, RabbitClusterConfigurationException {
         final Reconciliation rec = new Reconciliation(NAME, NAME, NAMESPACE, "type");
 
         final StatefulSet originalStatefulSet = new StatefulSet(
@@ -177,7 +177,7 @@ public class TestRabbitMQClusterReconciler {
     }
 
     @Test
-    void scalingDownPreservesOrphanPVCs() throws InterruptedException {
+    void scalingDownPreservesOrphanPVCs() throws InterruptedException, RabbitClusterConfigurationException {
         final Reconciliation rec = new Reconciliation(NAME, NAME, NAMESPACE, "type");
 
         final StatefulSet originalStatefulSet = new StatefulSet(

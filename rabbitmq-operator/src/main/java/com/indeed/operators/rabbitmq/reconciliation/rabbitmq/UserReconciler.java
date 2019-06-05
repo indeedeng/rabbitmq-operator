@@ -143,6 +143,9 @@ public class UserReconciler {
 
     private boolean permissionsMatch(final Permission desired, final Permission existing) {
         return existing != null &&
+                existing.getRead().pattern() != null &&
+                existing.getWrite().pattern() != null &&
+                existing.getConfigure().pattern() != null &&
                 desired.getRead().pattern().equals(existing.getRead().pattern()) &&
                 desired.getWrite().pattern().equals(existing.getWrite().pattern()) &&
                 desired.getConfigure().pattern().equals(existing.getConfigure().pattern());
