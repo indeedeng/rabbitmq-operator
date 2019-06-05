@@ -20,8 +20,8 @@ public class AddressAndVhost {
             @JsonProperty("address") final String address,
             @JsonProperty("vhost") final String vhost
     ) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(address), "'address' cannot be null");
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(address), "'vhost' cannot be null");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(address), "'address' cannot be empty or null");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(address), "'vhost' cannot be empty or null");
 
         this.address = address;
         this.vhost = vhost;

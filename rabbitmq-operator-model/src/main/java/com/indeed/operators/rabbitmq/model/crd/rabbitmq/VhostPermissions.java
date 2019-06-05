@@ -26,7 +26,7 @@ public class VhostPermissions {
             @JsonProperty("vhostName") final String vhostName,
             @JsonProperty("permissions") final VhostOperationPermissions permissions
     ) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(vhostName), "vhost permissions 'name' cannot be empty or null");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(vhostName), "vhost permissions 'vhostName' cannot be empty or null");
 
         this.vhostName = vhostName;
         this.permissions = Preconditions.checkNotNull(permissions, "vhost permissions 'permissions' cannot be null");
