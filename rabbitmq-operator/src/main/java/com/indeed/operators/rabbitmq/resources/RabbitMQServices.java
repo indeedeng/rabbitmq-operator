@@ -19,6 +19,7 @@ public class RabbitMQServices {
     private static final String TCP_PROTOCOL = "TCP";
     private static final String CLUSTER_IP = "ClusterIP";
     private static final String LOADBALANCER = "LoadBalancer";
+    private static final String NODEPORT = "NodePort";
 
     public Service buildService(final String namespace, final RabbitMQCustomResource rabbit) {
         final String clusterName = ModelFieldLookups.getName(rabbit);
@@ -115,6 +116,37 @@ public class RabbitMQServices {
                 .build();
     }
 
+    public Service buildNodePortService(final String namespace, final RabbitMQCustomResource rabbit) {
+        final String clusterName = ModelFieldLookups.getName(rabbit);
+
+        return new ServiceBuilder()
+                .withNewMetadata()
+                .withName(getNodePortServiceName(clusterName))
+                .withNamespace(namespace)
+                .addToLabels(Labels.Indeed.getIndeedLabels(rabbit))
+                .addToLabels(Labels.Kubernetes.INSTANCE, clusterName)
+                .addToLabels(Labels.Kubernetes.MANAGED_BY, Labels.Values.RABBITMQ_OPERATOR)
+                .addToLabels(Labels.Kubernetes.PART_OF, Labels.Values.RABBITMQ)
+                .withAnnotations(rabbit.getMetadata().getAnnotations())
+                .withOwnerReferences(
+                        new OwnerReference(
+                                rabbit.getApiVersion(),
+                                true,
+                                true,
+                                rabbit.getKind(),
+                                rabbit.getName(),
+                                rabbit.getMetadata().getUid()
+                        )
+                )
+                .endMetadata()
+                .withNewSpec()
+                .withPorts(constructServicePorts())
+                .withType(NODEPORT)
+                .addToSelector(Labels.Kubernetes.INSTANCE, clusterName)
+                .endSpec()
+                .build();
+    }
+
     private List<ServicePort> constructServicePorts() {
         return ImmutableList.of(
                 new ServicePortBuilder().withName(EPMD).withProtocol(TCP_PROTOCOL).withPort(EPMD_PORT).withNewTargetPort(EPMD_PORT).build(),
@@ -133,5 +165,9 @@ public class RabbitMQServices {
 
     public static String getLoadBalancerServiceName(final String rabbitName) {
         return String.format("%s-lb", getPublicServiceName(rabbitName));
+    }
+
+    public static String getNodePortServiceName(final String rabbitName) {
+        return String.format("%s-nodeport", getPublicServiceName(rabbitName));
     }
 }

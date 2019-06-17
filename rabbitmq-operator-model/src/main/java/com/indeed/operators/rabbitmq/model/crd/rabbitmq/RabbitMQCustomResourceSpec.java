@@ -14,12 +14,13 @@ import io.sundr.builder.annotations.Buildable;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         editableEnabled = false
 )
-@JsonPropertyOrder({"rabbitMQImage", "initContainerImage", "createLoadBalancer", "replicas", "compute", "storage", "highWatermarkFraction"})
+@JsonPropertyOrder({"rabbitMQImage", "initContainerImage", "createLoadBalancer", "createNodePort", "replicas", "compute", "storage", "highWatermarkFraction"})
 @JsonDeserialize(using = JsonDeserializer.None.class)
 public class RabbitMQCustomResourceSpec {
     private final String rabbitMQImage;
     private final String initContainerImage;
     private final boolean createLoadBalancer;
+    private final boolean createNodePort;
     private final int replicas;
     private final RabbitMQComputeResources computeResources;
     private final RabbitMQStorageResources storageResources;
@@ -31,6 +32,7 @@ public class RabbitMQCustomResourceSpec {
             @JsonProperty("rabbitMQImage") final String rabbitMQImage,
             @JsonProperty("initContainerImage") final String initContainerImage,
             @JsonProperty("createLoadBalancer") final boolean createLoadBalancer,
+            @JsonProperty("createNodePort") final boolean createNodePort,
             @JsonProperty("replicas") final int replicas,
             @JsonProperty("compute") final RabbitMQComputeResources computeResources,
             @JsonProperty("storage") final RabbitMQStorageResources storageResources,
@@ -40,6 +42,7 @@ public class RabbitMQCustomResourceSpec {
         this.rabbitMQImage = rabbitMQImage;
         this.initContainerImage = initContainerImage;
         this.createLoadBalancer = createLoadBalancer;
+        this.createNodePort = createNodePort;
         this.replicas = replicas;
         this.computeResources = computeResources;
         this.clusterSpec = clusterSpec;
@@ -57,6 +60,10 @@ public class RabbitMQCustomResourceSpec {
 
     public boolean isCreateLoadBalancer() {
         return createLoadBalancer;
+    }
+
+    public boolean isCreateNodePort() {
+        return createNodePort;
     }
 
     public int getReplicas() {
