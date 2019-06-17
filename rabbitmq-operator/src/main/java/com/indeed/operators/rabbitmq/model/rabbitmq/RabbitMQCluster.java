@@ -20,6 +20,7 @@ public class RabbitMQCluster {
     private final Service mainService;
     private final Service discoveryService;
     private final Optional<Service> loadBalancerService;
+    private final Optional<Service> nodePortService;
     private final StatefulSet statefulSet;
     private final PodDisruptionBudget podDisruptionBudget;
     private final List<ShovelSpec> shovels;
@@ -35,6 +36,7 @@ public class RabbitMQCluster {
             final Service mainService,
             final Service discoveryService,
             final Optional<Service> loadBalancerService,
+            final Optional<Service> nodePortService,
             final StatefulSet statefulSet,
             final PodDisruptionBudget podDisruptionBudget,
             final List<ShovelSpec> shovels,
@@ -49,6 +51,7 @@ public class RabbitMQCluster {
         this.mainService = mainService;
         this.discoveryService = discoveryService;
         this.loadBalancerService = loadBalancerService;
+        this.nodePortService = nodePortService;
         this.statefulSet = statefulSet;
         this.podDisruptionBudget = podDisruptionBudget;
         this.shovels = shovels;
@@ -83,6 +86,10 @@ public class RabbitMQCluster {
 
     public Optional<Service> getLoadBalancerService() {
         return loadBalancerService;
+    }
+
+    public Optional<Service> getNodePortService() {
+        return nodePortService;
     }
 
     public StatefulSet getStatefulSet() {
@@ -121,6 +128,7 @@ public class RabbitMQCluster {
         private Service mainService;
         private Service discoveryService;
         private Optional<Service> loadBalancerService;
+        private Optional<Service> nodePortService;
         private StatefulSet statefulSet;
         private PodDisruptionBudget podDisruptionBudget;
         private List<ShovelSpec> shovels;
@@ -163,6 +171,11 @@ public class RabbitMQCluster {
             return this;
         }
 
+        public Builder withNodePortService(final Optional<Service> nodePortService) {
+            this.nodePortService = nodePortService;
+            return this;
+        }
+
         public Builder withStatefulSet(final StatefulSet statefulSet) {
             this.statefulSet = statefulSet;
             return this;
@@ -202,6 +215,7 @@ public class RabbitMQCluster {
                     mainService,
                     discoveryService,
                     loadBalancerService,
+                    nodePortService,
                     statefulSet,
                     podDisruptionBudget,
                     shovels,

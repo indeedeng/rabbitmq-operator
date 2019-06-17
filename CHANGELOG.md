@@ -12,6 +12,7 @@ Improvements
 
 New Features
 ```
+#61 - Added createNodePort to spec that triggers creation of a NodePort service
 ```
 
 #### 0.0.3

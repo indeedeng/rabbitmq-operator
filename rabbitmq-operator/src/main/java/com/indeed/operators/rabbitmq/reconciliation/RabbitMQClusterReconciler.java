@@ -110,6 +110,12 @@ public class RabbitMQClusterReconciler {
             servicesController.delete(RabbitMQServices.getLoadBalancerServiceName(cluster.getName()), cluster.getNamespace());
         }
 
+        if (cluster.getNodePortService().isPresent()) {
+            servicesController.createOrUpdate(cluster.getNodePortService().get());
+        } else {
+            servicesController.delete(RabbitMQServices.getNodePortServiceName(cluster.getName()), cluster.getNamespace());
+        }
+
         statefulSetController.createOrUpdate(cluster.getStatefulSet());
         statefulSetController.waitForReady(cluster.getStatefulSet().getMetadata().getName(), cluster.getStatefulSet().getMetadata().getNamespace(), 5, TimeUnit.MINUTES);
 

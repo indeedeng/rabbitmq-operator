@@ -81,6 +81,13 @@ public class RabbitMQClusterFactory {
             loadBalancerService = Optional.empty();
         }
 
+        final Optional<Service> nodePortService;
+        if (spec.isCreateNodePort()) {
+            nodePortService = Optional.of(rabbitMQServices.buildNodePortService(namespace, resource));
+        } else {
+            nodePortService = Optional.empty();
+        }
+
         final Container container = rabbitMQContainers.buildContainer(
                 namespace,
                 clusterName,
@@ -102,6 +109,7 @@ public class RabbitMQClusterFactory {
                 .withMainService(mainService)
                 .withDiscoveryService(discoveryService)
                 .withLoadBalancerService(loadBalancerService)
+                .withNodePortService(nodePortService)
                 .withStatefulSet(statefulSet)
                 .withPodDisruptionBudget(podDisruptionBudget)
                 .withShovels(resource.getSpec().getClusterSpec().getShovels())
