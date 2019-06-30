@@ -4,7 +4,7 @@
 ### Status: **Pre-alpha! Not for production use! Breaking changes can appear at anytime without notice!**
 
 [![Build Status](https://travis-ci.org/indeedeng/rabbitmq-operator.svg?branch=master)](https://travis-ci.org/indeedeng/rabbitmq-operator) 
-![NetflixOSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/rabbitmq-operator.svg)
+![OSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/rabbitmq-operator.svg)
 
 
 Provision and manage RabbitMQ clusters on Kubernetes! This operator currently has the following features:
