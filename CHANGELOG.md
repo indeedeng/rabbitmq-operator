@@ -3,6 +3,7 @@
 #### 0.0.5
 Bugs
 ```
+#66 - Remove Indeed-specific flags from the Dockerfile
 ```
 
 Improvements
