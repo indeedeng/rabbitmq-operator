@@ -1,5 +1,18 @@
 ## CHANGELOG
 
+#### 0.0.6
+Bugs
+```
+```
+
+Improvements
+```
+```
+
+New Features
+```
+```
+
 #### 0.0.5
 Bugs
 ```
