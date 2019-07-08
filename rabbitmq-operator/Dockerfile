@@ -6,4 +6,4 @@ RUN chown rabbitmq-operator:rabbitmq-operator -R /app
 USER rabbitmq-operator
 WORKDIR /app
 RUN unzip rabbitmq-operator.zip
-CMD ["java", "-cp", "rabbitmq-operator/lib/*", "-Dindeed.application=RabbitMQOperator", "-Dindeed.staging.level=local", "com.indeed.operators.rabbitmq.RabbitMQOperator"]
+CMD ["java", "-cp", "rabbitmq-operator/lib/*", "com.indeed.operators.rabbitmq.RabbitMQOperator"]
