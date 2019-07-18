@@ -70,3 +70,10 @@ Operator for RabbitMQ is governed by the [Contributor Covenant v 1.4.1](CODE_OF_
 
 # License
 Operator for RabbitMQ is licensed under the [Apache 2 License](LICENSE).
+
+# Creating a Release
+Check the GitHub [releases page](https://github.com/indeedeng/rabbitmq-operator/releases) for the latest version and from that determine the next version to release. On master, create a tag (`git tag <the new version>`) and push it (`git push --tags`). [release.sh](release.sh) will see the tag is on master and push the new version to DockerHub automatically (via Travis).
+
+[Draft a new release](https://github.com/indeedeng/rabbitmq-operator/releases/new), put the tag you just created in the "tag version" box, and copy everything from [CHANGELOG.md](CHANGELOG.md) into the release description.
+
+Finally, add a `Bugs`, `Improvements`, and `New Features` section for the next version.
