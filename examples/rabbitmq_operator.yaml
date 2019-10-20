@@ -221,7 +221,7 @@ subjects:
     name: rabbitmq-user
     namespace: rabbitmqs
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -241,7 +241,7 @@ spec:
         operator: rabbitmq.operator.indeed.com
     spec:
       containers:
-        - image: registry.local.tld/rabbitmq-operator:latest
+        - image: indeedoss/rabbitmq-operator:latest
           name: rabbitmq-operator
           resources:
             limits:
