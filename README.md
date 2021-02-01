@@ -1,7 +1,7 @@
 # Operator for RabbitMQ
 
 ## Overview
-### Status: **Pre-alpha! Not for production use! Breaking changes can appear at anytime without notice!**
+### Status: **Indeed made the decision to not go forward with this project and has discontinued maintinence**
 
 [![Build Status](https://travis-ci.org/indeedeng/rabbitmq-operator.svg?branch=master)](https://travis-ci.org/indeedeng/rabbitmq-operator) 
 ![OSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/rabbitmq-operator.svg)
