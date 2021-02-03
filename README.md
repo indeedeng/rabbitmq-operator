@@ -1,7 +1,7 @@
-# Operator for RabbitMQ
+# Operator for RabbitMQ 2.22
 
 ## Overview
-### Status: **Pre-alpha! Not for production use! Breaking changes can appear at anytime without notice!**
+### Status: **Indeed is no longer maintaining this application and the repo will be archived 2/22/21 **
 
 [![Build Status](https://travis-ci.org/indeedeng/rabbitmq-operator.svg?branch=master)](https://travis-ci.org/indeedeng/rabbitmq-operator) 
 ![OSS Lifecycle](https://img.shields.io/osslifecycle/indeedeng/rabbitmq-operator.svg)
